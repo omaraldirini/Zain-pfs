@@ -19,6 +19,7 @@
         'views/zain_resignation_views.xml',
         'views/zain_profit_distribution_views.xml',
         'views/zain_configuration_views.xml',
+        'views/portal_templates.xml',
         'views/menu_views.xml',
     ],
     'installable': True,
