@@ -187,8 +187,6 @@
                         domain="[('state','in',['submitted','preparation','approval_1','approval_2'])]"/>
                 <filter name="pending_payment" string="Pending Payment"
                         domain="[('state','=','pending_payment')]"/>
-                <filter name="overdue" string="Has Overdue Installments"
-                        domain="[('overdue_count','>',0)]"/>
                 <filter name="reschedule" string="Reschedule / Buyout"
                         domain="[('is_rescheduled','=',True)]"/>
                 <separator/>
