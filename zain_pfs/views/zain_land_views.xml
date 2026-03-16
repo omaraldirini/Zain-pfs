@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ── Form view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_land_form" model="ir.ui.view">
         <field name="name">zain.land.form</field>
         <field name="model">zain.land</field>
@@ -17,49 +18,159 @@
                            statusbar_visible="available,reserved,sold"/>
                 </header>
                 <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_mark_available"
+                                icon="fa-file-text-o"
+                                invisible="not land_loan_ids">
+                            <field name="active_loan_id" widget="many2one_avatar"
+                                   string="Active Loan" readonly="1"/>
+                        </button>
+                    </div>
+
                     <group>
                         <group string="Plot Details">
                             <field name="name"/>
-                            <field name="area"/>
-                            <field name="basin"/>
                             <field name="plot_number"/>
+                            <field name="basin"/>
+                            <field name="area"/>
                             <field name="location"/>
                         </group>
                         <group string="Pricing &amp; Status">
                             <field name="price"/>
-                            <field name="status"/>
+                            <field name="status" readonly="1"/>
                             <field name="reserved_member_id" readonly="1"
                                    invisible="status == 'available'"/>
+                            <field name="reserved_date" readonly="1"
+                                   invisible="status == 'available'"/>
+                            <field name="sold_date" readonly="1"
+                                   invisible="status != 'sold'"/>
                         </group>
                     </group>
                     <field name="notes" placeholder="Notes..."/>
+
+                    <notebook>
+                        <page string="Loans" name="loans"
+                              invisible="not land_loan_ids">
+                            <field name="land_loan_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="member_id"/>
+                                    <field name="date"/>
+                                    <field name="financed_amount"/>
+                                    <field name="remaining_balance"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
                 </sheet>
                 <chatter/>
             </form>
         </field>
     </record>
 
+    <!-- ── List view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_land_list" model="ir.ui.view">
         <field name="name">zain.land.list</field>
         <field name="model">zain.land</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-success="status == 'available'"
+                  decoration-warning="status == 'reserved'"
+                  decoration-muted="status == 'sold'">
                 <field name="name"/>
-                <field name="area"/>
-                <field name="basin"/>
                 <field name="plot_number"/>
+                <field name="area"/>
+                <field name="basin" optional="hide"/>
                 <field name="location"/>
                 <field name="price"/>
                 <field name="status"/>
                 <field name="reserved_member_id"/>
+                <field name="reserved_date" optional="hide"/>
+                <field name="sold_date" optional="hide"/>
             </list>
         </field>
     </record>
 
+    <!-- ── Kanban view ───────────────────────────────────────────────────── -->
+    <record id="view_zain_land_kanban" model="ir.ui.view">
+        <field name="name">zain.land.kanban</field>
+        <field name="model">zain.land</field>
+        <field name="arch" type="xml">
+            <kanban default_group_by="status" class="o_kanban_small_column">
+                <field name="name"/>
+                <field name="plot_number"/>
+                <field name="area"/>
+                <field name="price"/>
+                <field name="status"/>
+                <field name="reserved_member_id"/>
+                <field name="location"/>
+                <templates>
+                    <t t-name="card">
+                        <div class="o_kanban_record_top">
+                            <div class="o_kanban_record_headings">
+                                <strong class="o_kanban_record_title">
+                                    <field name="name"/>
+                                </strong>
+                            </div>
+                        </div>
+                        <div class="o_kanban_record_body">
+                            <div t-if="record.plot_number.value">
+                                Plot #<field name="plot_number"/>
+                            </div>
+                            <div>
+                                Area: <field name="area"/> sq m
+                            </div>
+                            <div t-if="record.location.value">
+                                <field name="location"/>
+                            </div>
+                            <div class="fw-bold mt-2">
+                                <field name="price"/> JOD
+                            </div>
+                            <div t-if="record.reserved_member_id.value"
+                                 class="text-muted small">
+                                Reserved: <field name="reserved_member_id"/>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+    <!-- ── Search view ───────────────────────────────────────────────────── -->
+    <record id="view_zain_land_search" model="ir.ui.view">
+        <field name="name">zain.land.search</field>
+        <field name="model">zain.land</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="plot_number"/>
+                <field name="location"/>
+                <field name="basin"/>
+                <filter name="available" string="Available"
+                        domain="[('status','=','available')]"/>
+                <filter name="reserved" string="Reserved"
+                        domain="[('status','=','reserved')]"/>
+                <filter name="sold" string="Sold"
+                        domain="[('status','=','sold')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_status" string="Status"
+                            context="{'group_by': 'status'}"/>
+                    <filter name="group_basin" string="Basin"
+                            context="{'group_by': 'basin'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────────── -->
     <record id="action_zain_land" model="ir.actions.act_window">
         <field name="name">Land Plots</field>
         <field name="res_model">zain.land</field>
-        <field name="view_mode">list,form</field>
+        <field name="view_mode">kanban,list,form</field>
+        <field name="search_view_id" ref="view_zain_land_search"/>
+        <field name="context">{'search_default_available': 1}</field>
     </record>
 
 </odoo>

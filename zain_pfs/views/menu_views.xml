@@ -49,11 +49,17 @@
               parent="menu_zain_pfs_land"
               action="action_zain_land"
               sequence="10"/>
+    <menuitem id="menu_zain_land_eligibility"
+              name="Eligibility List"
+              parent="menu_zain_pfs_land"
+              action="action_zain_land_eligibility"
+              sequence="20"
+              groups="zain_pfs.group_pfs_fund_admin"/>
     <menuitem id="menu_zain_land_loan"
               name="Land Loans"
               parent="menu_zain_pfs_land"
               action="action_zain_land_loan"
-              sequence="20"/>
+              sequence="30"/>
 
     <!-- ── Withdrawals ───────────────────────────────────────────────────── -->
     <menuitem id="menu_zain_pfs_withdrawals"

@@ -23,6 +23,9 @@ access_zain_withdrawal_employee,zain.withdrawal employee,model_zain_withdrawal,g
 access_zain_land_admin,zain.land admin,model_zain_land,group_pfs_fund_admin,1,1,1,1
 access_zain_land_employee,zain.land employee,model_zain_land,group_pfs_employee,1,0,0,0
 
+access_zain_land_eligibility_admin,zain.land.eligibility admin,model_zain_land_eligibility,group_pfs_fund_admin,1,1,1,1
+access_zain_land_eligibility_employee,zain.land.eligibility employee,model_zain_land_eligibility,group_pfs_employee,1,0,0,0
+
 access_zain_land_loan_admin,zain.land.loan admin,model_zain_land_loan,group_pfs_fund_admin,1,1,1,1
 access_zain_land_loan_employee,zain.land.loan employee,model_zain_land_loan,group_pfs_employee,1,1,1,0
 access_zain_land_loan_line_admin,zain.land.loan.line admin,model_zain_land_loan_line,group_pfs_fund_admin,1,1,1,1

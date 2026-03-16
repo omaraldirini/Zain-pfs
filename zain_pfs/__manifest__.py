@@ -14,6 +14,7 @@
         'views/zain_loan_views.xml',
         'views/zain_withdrawal_views.xml',
         'views/zain_land_views.xml',
+        'views/zain_land_eligibility_views.xml',
         'views/zain_land_loan_views.xml',
         'views/zain_resignation_views.xml',
         'views/zain_profit_distribution_views.xml',

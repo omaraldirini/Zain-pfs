@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_land_eligibility_list" model="ir.ui.view">
+        <field name="name">zain.land.eligibility.list</field>
+        <field name="model">zain.land.eligibility</field>
+        <field name="arch" type="xml">
+            <list editable="bottom"
+                  decoration-success="state == 'completed'"
+                  decoration-warning="state == 'offered'"
+                  decoration-muted="state == 'removed'">
+                <field name="sequence" widget="handle"/>
+                <field name="member_id"/>
+                <field name="employee_id" readonly="1"/>
+                <field name="department_id" readonly="1"/>
+                <field name="member_contribution_months" readonly="1"/>
+                <field name="member_balance" readonly="1"/>
+                <field name="enroll_date"/>
+                <field name="offered_land_id"/>
+                <field name="land_loan_id" readonly="1" optional="hide"/>
+                <field name="state"/>
+                <button name="action_offer_plot" string="Offer Plot" type="object"
+                        icon="fa-hand-o-right"
+                        invisible="state != 'waiting'"
+                        groups="zain_pfs.group_pfs_fund_admin"/>
+                <button name="action_complete" string="Complete" type="object"
+                        icon="fa-check"
+                        invisible="state != 'offered'"
+                        groups="zain_pfs.group_pfs_fund_admin"/>
+                <button name="action_remove" string="Remove" type="object"
+                        icon="fa-times"
+                        invisible="state in ('completed', 'removed')"
+                        groups="zain_pfs.group_pfs_fund_admin"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_zain_land_eligibility_form" model="ir.ui.view">
+        <field name="name">zain.land.eligibility.form</field>
+        <field name="model">zain.land.eligibility</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_offer_plot" string="Offer Plot" type="object"
+                            invisible="state != 'waiting'"
+                            class="btn-primary"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_complete" string="Mark Completed" type="object"
+                            invisible="state != 'offered'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_remove" string="Remove from List" type="object"
+                            invisible="state in ('completed', 'removed')"/>
+                    <button name="action_reset_waiting" string="Reset to Waiting" type="object"
+                            invisible="state not in ('offered', 'removed')"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="waiting,offered,completed"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Member">
+                            <field name="sequence"/>
+                            <field name="member_id"/>
+                            <field name="enroll_date"/>
+                        </group>
+                        <group string="Member Summary" invisible="not member_id">
+                            <field name="member_contribution_months" readonly="1"/>
+                            <field name="member_balance" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Offered Plot" invisible="state == 'waiting'">
+                        <field name="offered_land_id"/>
+                        <field name="land_loan_id" readonly="1"/>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_land_eligibility_search" model="ir.ui.view">
+        <field name="name">zain.land.eligibility.search</field>
+        <field name="model">zain.land.eligibility</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="member_id"/>
+                <filter name="waiting" string="Waiting"
+                        domain="[('state','=','waiting')]"/>
+                <filter name="offered" string="Plot Offered"
+                        domain="[('state','=','offered')]"/>
+                <filter name="completed" string="Completed"
+                        domain="[('state','=','completed')]"/>
+                <filter name="active" string="Active Queue"
+                        domain="[('state','in',['waiting','offered'])]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_dept" string="Department"
+                            context="{'group_by': 'department_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_zain_land_eligibility" model="ir.actions.act_window">
+        <field name="name">Land Eligibility List</field>
+        <field name="res_model">zain.land.eligibility</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zain_land_eligibility_search"/>
+        <field name="context">{'search_default_active': 1}</field>
+    </record>
+
+</odoo>
