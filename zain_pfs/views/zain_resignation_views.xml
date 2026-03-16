@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ── Form view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_resignation_form" model="ir.ui.view">
         <field name="name">zain.resignation.form</field>
         <field name="model">zain.resignation</field>
@@ -8,43 +9,110 @@
             <form>
                 <header>
                     <button name="action_submit" string="Submit" type="object"
-                            invisible="state != 'draft'" class="btn-primary"/>
+                            invisible="state != 'draft'"
+                            class="btn-primary"/>
                     <button name="action_approve" string="Approve Settlement" type="object"
                             invisible="state != 'submitted'"
                             groups="zain_pfs.group_pfs_fund_committee"
                             class="btn-primary"/>
                     <button name="action_cancel" string="Cancel" type="object"
-                            invisible="state in ('approved','cancelled')"/>
+                            invisible="state in ('approved', 'cancelled')"/>
                     <button name="action_reset_draft" string="Reset to Draft" type="object"
                             invisible="state != 'cancelled'"
                             groups="zain_pfs.group_pfs_fund_admin"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,submitted,approved"/>
                 </header>
+
                 <sheet>
+                    <!-- Fraud warning banner -->
+                    <div class="alert alert-danger" role="alert"
+                         invisible="not is_fraudulent">
+                        <strong>Fraudulent Termination</strong> — member is only entitled
+                        to personal contributions (0% company contributions and profits).
+                    </div>
+
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
+
+                    <!-- ── Request details ───────────────────────────────────── -->
                     <group>
+                        <group string="Resignation Details">
+                            <field name="member_id"
+                                   readonly="state != 'draft'"/>
+                            <field name="resignation_date"
+                                   readonly="state != 'draft'"/>
+                            <field name="reason"
+                                   readonly="state != 'draft'"/>
+                            <field name="is_fraudulent" readonly="1"
+                                   invisible="not is_fraudulent"/>
+                        </group>
+                        <group string="Member Summary" invisible="not member_id">
+                            <field name="member_contribution_months" readonly="1"/>
+                            <field name="member_balance" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <!-- ── Vesting ───────────────────────────────────────────── -->
+                    <group string="Vesting" invisible="not member_id or not resignation_date">
                         <group>
-                            <field name="member_id"/>
-                            <field name="resignation_date"/>
-                            <field name="reason"/>
-                            <field name="is_fraudulent" readonly="1"/>
+                            <field name="cutoff_date" readonly="1"/>
+                            <field name="contribution_months_at_resignation" readonly="1"/>
                         </group>
                         <group>
-                            <field name="contribution_months_at_resignation" readonly="1"/>
                             <field name="vesting_percent" readonly="1" widget="percentage"/>
                         </group>
                     </group>
-                    <group string="Settlement Breakdown" invisible="state == 'draft'">
-                        <field name="employee_contributions" readonly="1"/>
-                        <field name="company_contributions_entitled" readonly="1"/>
-                        <field name="profits_entitled" readonly="1"/>
-                        <field name="withdrawn_amounts" readonly="1"/>
-                        <field name="outstanding_loans" readonly="1"/>
+
+                    <!-- ── Settlement breakdown ──────────────────────────────── -->
+                    <group string="Settlement Breakdown"
+                           invisible="not member_id or not resignation_date">
+                        <group string="Entitlements">
+                            <field name="employee_contributions" readonly="1"/>
+                            <field name="company_contribution_gross" readonly="1"/>
+                            <field name="company_contributions_entitled" readonly="1"/>
+                            <field name="total_profits_gross" readonly="1"/>
+                            <field name="profits_entitled" readonly="1"/>
+                        </group>
+                        <group string="Deductions">
+                            <field name="withdrawn_amounts" readonly="1"/>
+                            <field name="outstanding_loans" readonly="1"/>
+                        </group>
+                    </group>
+
+                    <group string="Final Settlement"
+                           invisible="not member_id or not resignation_date">
                         <field name="final_settlement" readonly="1"/>
                     </group>
+
+                    <!-- ── Payment disbursement ──────────────────────────────── -->
+                    <group string="Payment Disbursement"
+                           invisible="state not in ('submitted', 'approved')">
+                        <group>
+                            <field name="payment_method"
+                                   readonly="state == 'approved'"/>
+                            <field name="settlement_date" readonly="1"
+                                   invisible="not settlement_date"/>
+                        </group>
+                        <group invisible="payment_method != 'cheque'">
+                            <field name="cheque_number"
+                                   readonly="state == 'approved'"/>
+                            <field name="cheque_date"
+                                   readonly="state == 'approved'"/>
+                            <field name="cheque_amount"
+                                   readonly="state == 'approved'"/>
+                        </group>
+                    </group>
+
+                    <!-- ── Frozen values (post-approval audit trail) ─────────── -->
+                    <group string="Approved Values" invisible="state != 'approved'">
+                        <field name="approved_contribution_months" readonly="1"/>
+                        <field name="approved_vesting_percent" readonly="1"
+                               widget="percentage"/>
+                        <field name="approved_final_settlement" readonly="1"/>
+                    </group>
+
                     <field name="notes" placeholder="Notes..."/>
                 </sheet>
                 <chatter/>
@@ -52,27 +120,69 @@
         </field>
     </record>
 
+    <!-- ── List view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_resignation_list" model="ir.ui.view">
         <field name="name">zain.resignation.list</field>
         <field name="model">zain.resignation</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-danger="is_fraudulent"
+                  decoration-success="state == 'approved'"
+                  decoration-muted="state == 'cancelled'">
                 <field name="name"/>
                 <field name="member_id"/>
                 <field name="resignation_date"/>
                 <field name="reason"/>
+                <field name="is_fraudulent" optional="hide"/>
                 <field name="contribution_months_at_resignation"/>
                 <field name="vesting_percent" widget="percentage"/>
                 <field name="final_settlement"/>
+                <field name="approved_final_settlement" optional="hide"/>
+                <field name="settlement_date" optional="hide"/>
                 <field name="state"/>
             </list>
         </field>
     </record>
 
+    <!-- ── Search view ───────────────────────────────────────────────────── -->
+    <record id="view_zain_resignation_search" model="ir.ui.view">
+        <field name="name">zain.resignation.search</field>
+        <field name="model">zain.resignation</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="member_id"/>
+                <filter name="draft" string="Draft"
+                        domain="[('state','=','draft')]"/>
+                <filter name="pending" string="Pending Approval"
+                        domain="[('state','=','submitted')]"/>
+                <filter name="approved" string="Approved"
+                        domain="[('state','=','approved')]"/>
+                <separator/>
+                <filter name="personal" string="Personal"
+                        domain="[('reason','=','personal')]"/>
+                <filter name="fraud" string="Fraud / Termination"
+                        domain="[('reason','=','fraud')]"/>
+                <filter name="death" string="Death"
+                        domain="[('reason','=','death')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_reason" string="Reason"
+                            context="{'group_by': 'reason'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_month" string="Resignation Month"
+                            context="{'group_by': 'resignation_date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────────── -->
     <record id="action_zain_resignation" model="ir.actions.act_window">
         <field name="name">Resignations &amp; Settlements</field>
         <field name="res_model">zain.resignation</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zain_resignation_search"/>
+        <field name="context">{'search_default_pending': 1}</field>
     </record>
 
 </odoo>
