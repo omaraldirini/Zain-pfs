@@ -220,7 +220,7 @@
 
                     <!-- Quick links -->
                     <div class="row g-3">
-                        <div class="col-sm-6 col-lg-4">
+                        <div class="col-sm-6 col-lg-3">
                             <a href="/my/pfs/loans" class="card border-0 shadow-sm text-decoration-none h-100">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <i class="fa fa-2x fa-money text-primary"/>
@@ -234,7 +234,7 @@
                                 </div>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-4">
+                        <div class="col-sm-6 col-lg-3">
                             <a href="/my/pfs/withdrawals" class="card border-0 shadow-sm text-decoration-none h-100">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <i class="fa fa-2x fa-arrow-circle-o-down text-warning"/>
@@ -247,7 +247,7 @@
                                 </div>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-4">
+                        <div class="col-sm-6 col-lg-3">
                             <a href="/my/pfs/land-loans" class="card border-0 shadow-sm text-decoration-none h-100">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <i class="fa fa-2x fa-home text-success"/>
@@ -261,6 +261,25 @@
                                 </div>
                             </a>
                         </div>
+                        <!-- Settlement card — shown when member has a resignation record -->
+                        <t t-if="latest_resignation">
+                            <div class="col-sm-6 col-lg-3">
+                                <a href="/my/pfs/resignation"
+                                   class="card border-0 shadow-sm text-decoration-none h-100">
+                                    <div class="card-body d-flex align-items-center gap-3">
+                                        <i class="fa fa-2x fa-file-text-o text-secondary"/>
+                                        <div>
+                                            <strong>Settlement</strong>
+                                            <p class="text-muted mb-0 small">
+                                                <t t-set="state_value"
+                                                   t-value="latest_resignation.state"/>
+                                                <t t-call="zain_pfs.portal_pfs_state_badge"/>
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
                     </div>
 
                 </div>
@@ -1560,6 +1579,340 @@
 
                     <a href="/my/pfs/land-loans" class="btn btn-outline-secondary">
                         <i class="fa fa-arrow-left me-1"/> Back to Land Loans
+                    </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Resignation & Settlement list  /my/pfs/resignation
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="portal_pfs_resignation" name="PFS: My Resignation &amp; Settlement">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <nav aria-label="breadcrumb">
+                <t t-call="zain_pfs.portal_pfs_breadcrumb">
+                    <t t-set="crumbs" t-value="[
+                        ('Provident Fund', '/my/pfs'),
+                        ('Resignation &amp; Settlement', None)]"/>
+                </t>
+            </nav>
+            <div class="o_portal_wrap">
+                <div class="container-fluid py-3">
+                    <h3 class="mb-3">Resignation &amp; Settlement</h3>
+
+                    <t t-if="not resignations">
+                        <div class="alert alert-info">
+                            No resignation or settlement record found.
+                            If you have submitted a resignation please contact the HR department.
+                        </div>
+                    </t>
+                    <t t-else="">
+                        <t t-foreach="resignations" t-as="r">
+                            <!-- One card per resignation record (usually just one) -->
+                            <div class="card border-0 shadow-sm mb-3">
+                                <div class="card-body">
+                                    <div class="d-flex flex-wrap justify-content-between
+                                                align-items-center gap-2 mb-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <h5 class="mb-0" t-out="r.name"/>
+                                            <t t-set="state_value" t-value="r.state"/>
+                                            <t t-call="zain_pfs.portal_pfs_state_badge"/>
+                                        </div>
+                                        <a t-attf-href="/my/pfs/resignation/#{r.id}"
+                                           class="btn btn-sm btn-outline-primary">
+                                            View Details
+                                        </a>
+                                    </div>
+                                    <div class="row">
+                                        <div class="col-sm-6 col-md-3 mb-2">
+                                            <small class="text-muted d-block">Resignation Date</small>
+                                            <span t-out="r.resignation_date"/>
+                                        </div>
+                                        <div class="col-sm-6 col-md-3 mb-2">
+                                            <small class="text-muted d-block">Contribution Months</small>
+                                            <span t-out="r.contribution_months_at_resignation or '—'"/>
+                                        </div>
+                                        <div class="col-sm-6 col-md-3 mb-2">
+                                            <small class="text-muted d-block">Vesting</small>
+                                            <span>
+                                                <t t-esc="'%.0f' % ((r.approved_vesting_percent if r.state == 'approved' else r.vesting_percent) * 100)"/>%
+                                            </span>
+                                        </div>
+                                        <div class="col-sm-6 col-md-3 mb-2">
+                                            <small class="text-muted d-block">
+                                                <t t-if="r.state == 'approved'">
+                                                    Approved Settlement
+                                                </t>
+                                                <t t-else="">Estimated Settlement</t>
+                                            </small>
+                                            <strong t-attf-class="#{r.state == 'approved' and 'text-success' or ''}">
+                                                <t t-esc="'%.3f' % (r.approved_final_settlement if r.state == 'approved' else r.final_settlement)"/> JOD
+                                            </strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </t>
+                    </t>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Resignation detail  /my/pfs/resignation/<id>
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="portal_pfs_resignation_detail" name="PFS: Resignation Detail">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <nav aria-label="breadcrumb">
+                <t t-call="zain_pfs.portal_pfs_breadcrumb">
+                    <t t-set="crumbs" t-value="[
+                        ('Provident Fund', '/my/pfs'),
+                        ('Resignation &amp; Settlement', '/my/pfs/resignation'),
+                        (resignation.name, None)]"/>
+                </t>
+            </nav>
+            <div class="o_portal_wrap">
+                <div class="container-fluid py-3">
+
+                    <!-- Title + status -->
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-4">
+                        <h3 class="mb-0" t-out="resignation.name"/>
+                        <t t-set="state_value" t-value="resignation.state"/>
+                        <t t-call="zain_pfs.portal_pfs_state_badge"/>
+                    </div>
+
+                    <!-- Fraud warning -->
+                    <div t-if="resignation.is_fraudulent"
+                         class="alert alert-danger">
+                        <i class="fa fa-exclamation-triangle me-2"/>
+                        <strong>Fraudulent Termination</strong> — only personal
+                        contributions are returned (0% company contributions and profits).
+                    </div>
+
+                    <!-- Pending notice -->
+                    <div t-if="resignation.state == 'submitted'"
+                         class="alert alert-warning">
+                        <i class="fa fa-clock-o me-2"/>
+                        Your resignation record is under review. The settlement figures
+                        shown below are <strong>estimates</strong> and will be frozen at
+                        the time of approval.
+                    </div>
+
+                    <!-- ── Resignation details ─────────────────────────────── -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light fw-bold">Resignation Details</div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-sm-6 col-md-3 mb-3">
+                                    <small class="text-muted d-block">Reference</small>
+                                    <span t-out="resignation.name"/>
+                                </div>
+                                <div class="col-sm-6 col-md-3 mb-3">
+                                    <small class="text-muted d-block">Resignation Date</small>
+                                    <span t-out="resignation.resignation_date"/>
+                                </div>
+                                <div class="col-sm-6 col-md-3 mb-3"
+                                     t-if="resignation.cutoff_date">
+                                    <small class="text-muted d-block">
+                                        Contribution Cut-off Date
+                                    </small>
+                                    <span t-out="resignation.cutoff_date"/>
+                                    <div class="form-text">
+                                        Contributions up to this date are counted.
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-3 mb-3"
+                                     t-if="resignation.settlement_date">
+                                    <small class="text-muted d-block">Settlement Date</small>
+                                    <span t-out="resignation.settlement_date"/>
+                                </div>
+                                <div class="col-sm-6 col-md-3 mb-3"
+                                     t-if="resignation.notes">
+                                    <small class="text-muted d-block">Notes</small>
+                                    <span t-out="resignation.notes"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Vesting ─────────────────────────────────────────── -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light fw-bold">Vesting</div>
+                        <div class="card-body">
+                            <div class="row text-center g-3">
+                                <div class="col-sm-4">
+                                    <small class="text-muted d-block">
+                                        Contribution Months at Resignation
+                                    </small>
+                                    <h5 class="mb-0">
+                                        <t t-out="resignation.state == 'approved'
+                                            and resignation.approved_contribution_months
+                                            or resignation.contribution_months_at_resignation"/>
+                                    </h5>
+                                </div>
+                                <div class="col-sm-4">
+                                    <small class="text-muted d-block">Vesting %</small>
+                                    <h5 t-attf-class="mb-0 #{resignation.is_fraudulent and 'text-danger' or 'text-success'}">
+                                        <t t-esc="'%.0f' % ((
+                                            resignation.approved_vesting_percent
+                                            if resignation.state == 'approved'
+                                            else resignation.vesting_percent
+                                        ) * 100)"/>%
+                                    </h5>
+                                </div>
+                                <div class="col-sm-4">
+                                    <small class="text-muted d-block">Entitlement Basis</small>
+                                    <span t-if="resignation.reason == 'death'"
+                                          class="badge bg-info text-dark">Death – 100% vesting</span>
+                                    <span t-elif="resignation.reason == 'fraud'"
+                                          class="badge bg-danger">Fraud – 0% vesting</span>
+                                    <span t-else="" class="badge bg-secondary">Personal Resignation</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── Settlement breakdown ───────────────────────────── -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light fw-bold">
+                            Settlement Breakdown
+                            <t t-if="resignation.state != 'approved'">
+                                <small class="text-muted fw-normal ms-2">(estimates)</small>
+                            </t>
+                        </div>
+                        <div class="card-body p-0">
+                            <table class="table table-sm mb-0">
+                                <tbody>
+                                    <!-- Entitlements -->
+                                    <tr class="table-light">
+                                        <td colspan="2" class="fw-semibold ps-3">
+                                            Entitlements
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">Employee Contributions</td>
+                                        <td class="text-end pe-3">
+                                            <t t-esc="'%.3f' % resignation.employee_contributions"/> JOD
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            Company Contributions (gross)
+                                        </td>
+                                        <td class="text-end pe-3 text-muted">
+                                            <t t-esc="'%.3f' % resignation.company_contribution_gross"/> JOD
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            Company Contributions (vested
+                                            <t t-esc="'%.0f' % ((resignation.approved_vesting_percent if resignation.state == 'approved' else resignation.vesting_percent) * 100)"/>%)
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <t t-esc="'%.3f' % resignation.company_contributions_entitled"/> JOD
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">Profits (gross)</td>
+                                        <td class="text-end pe-3 text-muted">
+                                            <t t-esc="'%.3f' % resignation.total_profits_gross"/> JOD
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">
+                                            Profits (entitled: ⅓ + ⅔ × vesting)
+                                        </td>
+                                        <td class="text-end pe-3">
+                                            <t t-esc="'%.3f' % resignation.profits_entitled"/> JOD
+                                        </td>
+                                    </tr>
+
+                                    <!-- Deductions -->
+                                    <tr class="table-light">
+                                        <td colspan="2" class="fw-semibold ps-3">
+                                            Deductions
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">Previously Withdrawn</td>
+                                        <td class="text-end pe-3 text-danger">
+                                            − <t t-esc="'%.3f' % resignation.withdrawn_amounts"/> JOD
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="ps-4">Outstanding Loan Balances</td>
+                                        <td class="text-end pe-3 text-danger">
+                                            − <t t-esc="'%.3f' % resignation.outstanding_loans"/> JOD
+                                        </td>
+                                    </tr>
+
+                                    <!-- Total -->
+                                    <tr class="table-active fw-bold border-top border-2">
+                                        <td class="ps-3">
+                                            <t t-if="resignation.state == 'approved'">
+                                                Approved Settlement Amount
+                                            </t>
+                                            <t t-else="">Estimated Settlement Amount</t>
+                                        </td>
+                                        <td t-attf-class="text-end pe-3 fs-5 #{resignation.final_settlement >= 0 and 'text-success' or 'text-danger'}">
+                                            <t t-esc="'%.3f' % (
+                                                resignation.approved_final_settlement
+                                                if resignation.state == 'approved'
+                                                else resignation.final_settlement
+                                            )"/> JOD
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ── Approved payment details ───────────────────────── -->
+                    <t t-if="resignation.state == 'approved' and resignation.payment_method">
+                        <div class="card border-success border-2 shadow-sm mb-4">
+                            <div class="card-header bg-success text-white fw-bold">
+                                Payment Details
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-6 col-md-3 mb-3">
+                                        <small class="text-muted d-block">Payment Method</small>
+                                        <span>
+                                            <t t-if="resignation.payment_method == 'cheque'">
+                                                Cheque
+                                            </t>
+                                            <t t-else="">Bank Transfer</t>
+                                        </span>
+                                    </div>
+                                    <div class="col-sm-6 col-md-3 mb-3"
+                                         t-if="resignation.payment_method == 'cheque' and resignation.cheque_number">
+                                        <small class="text-muted d-block">Cheque Number</small>
+                                        <span t-out="resignation.cheque_number"/>
+                                    </div>
+                                    <div class="col-sm-6 col-md-3 mb-3"
+                                         t-if="resignation.payment_method == 'cheque' and resignation.cheque_date">
+                                        <small class="text-muted d-block">Cheque Date</small>
+                                        <span t-out="resignation.cheque_date"/>
+                                    </div>
+                                    <div class="col-sm-6 col-md-3 mb-3"
+                                         t-if="resignation.payment_method == 'cheque' and resignation.cheque_amount">
+                                        <small class="text-muted d-block">Cheque Amount</small>
+                                        <strong>
+                                            <t t-esc="'%.3f' % resignation.cheque_amount"/> JOD
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <a href="/my/pfs/resignation" class="btn btn-outline-secondary">
+                        <i class="fa fa-arrow-left me-1"/> Back to Settlement
                     </a>
                 </div>
             </div>

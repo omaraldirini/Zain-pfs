@@ -92,11 +92,15 @@ class PFSPortal(CustomerPortal):
         pending_withdrawals = member.withdrawal_ids.filtered(
             lambda w: w.state not in ('approved', 'cancelled')
         )
+        latest_resignation = member.resignation_ids.sorted(
+            key=lambda r: r.id, reverse=True
+        )[:1]
         return request.render('zain_pfs.portal_pfs_dashboard', {
             'member': member,
             'active_loans': active_loans,
             'active_land_loans': active_land_loans,
             'pending_withdrawals': pending_withdrawals,
+            'latest_resignation': latest_resignation,
             'page_name': 'pfs',
         })
 
@@ -379,6 +383,38 @@ class PFSPortal(CustomerPortal):
         if withdrawal:
             withdrawal.sudo().action_cancel()
         return request.redirect('/my/pfs/withdrawals')
+
+    # ── Resignation & Settlement ─────────────────────────────────────────────
+
+    @http.route('/my/pfs/resignation', type='http', auth='user', website=True)
+    def portal_pfs_resignation(self, **kwargs):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        resignations = member.resignation_ids.sorted(key=lambda r: r.id, reverse=True)
+        return request.render('zain_pfs.portal_pfs_resignation', {
+            'member': member,
+            'resignations': resignations,
+            'page_name': 'pfs_resignation',
+        })
+
+    @http.route('/my/pfs/resignation/<int:resignation_id>', type='http', auth='user',
+                website=True)
+    def portal_pfs_resignation_detail(self, resignation_id, **kwargs):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        resignation = member.resignation_ids.filtered(lambda r: r.id == resignation_id)
+        if not resignation:
+            return request.not_found()
+
+        return request.render('zain_pfs.portal_pfs_resignation_detail', {
+            'member': member,
+            'resignation': resignation,
+            'page_name': 'pfs_resignation',
+        })
 
     # ── Land Loans ───────────────────────────────────────────────────────────
 
