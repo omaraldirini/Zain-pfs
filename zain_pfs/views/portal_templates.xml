@@ -796,9 +796,35 @@
             </nav>
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
-                    <h3 class="mb-3">Withdrawals</h3>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">Withdrawals</h3>
+                        <t t-if="(can_50 or can_75) and not has_active_request">
+                            <a href="/my/pfs/withdrawals/new" class="btn btn-primary">
+                                <i class="fa fa-plus me-1"/> New Withdrawal Request
+                            </a>
+                        </t>
+                        <t t-elif="has_active_request">
+                            <span class="text-muted small">
+                                <i class="fa fa-clock-o me-1"/>
+                                You already have a withdrawal request in progress.
+                            </span>
+                        </t>
+                        <t t-else="">
+                            <span class="text-muted small">
+                                <i class="fa fa-info-circle me-1"/>
+                                Not eligible to request a withdrawal at this time.
+                            </span>
+                        </t>
+                    </div>
+
                     <t t-if="not withdrawals">
-                        <div class="alert alert-info">No withdrawal records found.</div>
+                        <div class="alert alert-info">
+                            No withdrawal records found.
+                            <t t-if="(can_50 or can_75) and not has_active_request">
+                                <a href="/my/pfs/withdrawals/new">Submit your first request.</a>
+                            </t>
+                        </div>
                     </t>
                     <t t-else="">
                         <div class="table-responsive">
@@ -856,6 +882,253 @@
     </template>
 
     <!-- ══════════════════════════════════════════════════════════════════════
+         Withdrawal application form  /my/pfs/withdrawals/new
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="portal_withdrawal_apply" name="PFS: Withdrawal Request Form">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <nav aria-label="breadcrumb">
+                <t t-call="zain_pfs.portal_pfs_breadcrumb">
+                    <t t-set="crumbs" t-value="[
+                        ('Provident Fund', '/my/pfs'),
+                        ('Withdrawals', '/my/pfs/withdrawals'),
+                        ('New Request', None)]"/>
+                </t>
+            </nav>
+
+            <div class="o_portal_wrap">
+                <div class="container py-3" style="max-width:720px">
+                    <h3 class="mb-4">Withdrawal Request</h3>
+
+                    <!-- Eligibility gate -->
+                    <t t-if="not can_50 and not can_75">
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            You are not currently eligible to request a withdrawal.
+                            <ul class="mb-0 mt-2">
+                                <li>
+                                    50% withdrawal requires
+                                    <strong t-out="min_50"/> months
+                                    (you have <strong t-out="member.contribution_months"/>).
+                                </li>
+                                <li>
+                                    75% withdrawal requires
+                                    <strong t-out="min_75"/> months.
+                                </li>
+                            </ul>
+                        </div>
+                    </t>
+
+                    <!-- Member eligibility summary -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light fw-bold">Your Eligibility Summary</div>
+                        <div class="card-body">
+                            <div class="row text-center g-3">
+                                <div class="col-sm-3">
+                                    <small class="text-muted d-block">Contribution Months</small>
+                                    <strong t-out="member.contribution_months"/>
+                                </div>
+                                <div class="col-sm-3">
+                                    <small class="text-muted d-block">Current Balance</small>
+                                    <strong>
+                                        <t t-esc="'%.3f' % member.current_balance"/> JOD
+                                    </strong>
+                                </div>
+                                <div class="col-sm-3">
+                                    <small class="text-muted d-block">
+                                        50% Eligible
+                                        <t t-if="not can_50">
+                                            <span class="badge bg-secondary ms-1">locked</span>
+                                        </t>
+                                    </small>
+                                    <strong t-attf-class="#{can_50 and 'text-success' or 'text-muted'}">
+                                        <t t-esc="'%.3f' % member.eligibility_50"/> JOD
+                                    </strong>
+                                </div>
+                                <div class="col-sm-3">
+                                    <small class="text-muted d-block">
+                                        75% Eligible
+                                        <t t-if="not can_75">
+                                            <span class="badge bg-secondary ms-1">locked</span>
+                                        </t>
+                                    </small>
+                                    <strong t-attf-class="#{can_75 and 'text-success' or 'text-muted'}">
+                                        <t t-esc="'%.3f' % member.eligibility_75"/> JOD
+                                    </strong>
+                                </div>
+                            </div>
+
+                            <!-- Loan settlement notice -->
+                            <t t-if="member.loan_balance > 0">
+                                <div class="alert alert-info mb-0 mt-3">
+                                    <i class="fa fa-info-circle me-2"/>
+                                    You have an outstanding personal loan balance of
+                                    <strong>
+                                        <t t-esc="'%.3f' % member.loan_balance"/> JOD
+                                    </strong>.
+                                    A 50% withdrawal will automatically settle your loan first;
+                                    any remainder will be paid to you in cash.
+                                </div>
+                            </t>
+                        </div>
+                    </div>
+
+                    <!-- General error -->
+                    <t t-if="errors.get('_general')">
+                        <div class="alert alert-danger">
+                            <i class="fa fa-times-circle me-2"/>
+                            <t t-out="errors['_general']"/>
+                        </div>
+                    </t>
+
+                    <form t-if="can_50 or can_75" method="post"
+                          action="/my/pfs/withdrawals/new">
+                        <input type="hidden" name="csrf_token"
+                               t-att-value="request.csrf_token()"/>
+
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-light fw-bold">Request Details</div>
+                            <div class="card-body">
+                                <div class="row g-3">
+
+                                    <!-- Withdrawal type -->
+                                    <div class="col-12">
+                                        <label class="form-label fw-semibold">
+                                            Withdrawal Type
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <t t-if="errors.get('withdrawal_type')">
+                                            <div class="text-danger small mb-1">
+                                                <t t-out="errors['withdrawal_type']"/>
+                                            </div>
+                                        </t>
+                                        <div class="d-flex flex-wrap gap-3">
+
+                                            <!-- 50% option -->
+                                            <div t-attf-class="form-check form-check-inline border rounded p-3 flex-fill
+                                                #{not can_50 and 'opacity-50' or ''}
+                                                #{form_data.get('withdrawal_type') == '50' and 'border-primary bg-primary bg-opacity-10' or ''}">
+                                                <input class="form-check-input" type="radio"
+                                                       name="withdrawal_type" id="type_50"
+                                                       value="50"
+                                                       t-att-disabled="not can_50 and 'disabled' or None"
+                                                       t-att-checked="form_data.get('withdrawal_type','50') == '50' and can_50 and 'checked' or None"
+                                                       onchange="updateMaxAmount(this)"/>
+                                                <label class="form-check-label" for="type_50">
+                                                    <strong>50% Withdrawal</strong>
+                                                    <span class="d-block text-muted small">
+                                                        Eligible:
+                                                        <strong class="text-success">
+                                                            <t t-esc="'%.3f' % member.eligibility_50"/> JOD
+                                                        </strong>
+                                                        · requires <t t-out="min_50"/> months
+                                                    </span>
+                                                </label>
+                                            </div>
+
+                                            <!-- 75% option -->
+                                            <div t-attf-class="form-check form-check-inline border rounded p-3 flex-fill
+                                                #{not can_75 and 'opacity-50' or ''}
+                                                #{form_data.get('withdrawal_type') == '75' and 'border-primary bg-primary bg-opacity-10' or ''}">
+                                                <input class="form-check-input" type="radio"
+                                                       name="withdrawal_type" id="type_75"
+                                                       value="75"
+                                                       t-att-disabled="not can_75 and 'disabled' or None"
+                                                       t-att-checked="form_data.get('withdrawal_type') == '75' and can_75 and 'checked' or None"
+                                                       onchange="updateMaxAmount(this)"/>
+                                                <label class="form-check-label" for="type_75">
+                                                    <strong>75% Withdrawal</strong>
+                                                    <span class="d-block text-muted small">
+                                                        Eligible:
+                                                        <strong class="text-success">
+                                                            <t t-esc="'%.3f' % member.eligibility_75"/> JOD
+                                                        </strong>
+                                                        · requires <t t-out="min_75"/> months
+                                                    </span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Requested amount -->
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold" for="requested_amount">
+                                            Requested Amount (JOD)
+                                            <span class="text-danger">*</span>
+                                        </label>
+                                        <div class="input-group">
+                                            <input type="number" step="0.001" min="0.001"
+                                                   class="form-control"
+                                                   id="requested_amount"
+                                                   name="requested_amount"
+                                                   t-att-value="form_data.get('requested_amount', '')"
+                                                   required="required"/>
+                                            <span class="input-group-text">JOD</span>
+                                        </div>
+                                        <t t-if="errors.get('requested_amount')">
+                                            <div class="text-danger small mt-1">
+                                                <t t-out="errors['requested_amount']"/>
+                                            </div>
+                                        </t>
+                                        <div class="form-text" id="max_amount_hint">
+                                            Enter an amount up to your eligible balance above.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            <label class="form-label" for="notes">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes"
+                                      rows="3" placeholder="Any additional information…">
+                                <t t-out="form_data.get('notes', '')"/>
+                            </textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-paper-plane me-1"/> Save as Draft
+                            </button>
+                            <a href="/my/pfs/withdrawals" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+
+                        <p class="text-muted small mt-3">
+                            <i class="fa fa-info-circle me-1"/>
+                            Your request will be saved as a <strong>Draft</strong>.
+                            Use the <strong>Submit to HR</strong> button on the next page
+                            when you are ready to send it for review.
+                        </p>
+                    </form>
+
+                </div>
+            </div>
+
+            <!-- Inline JS: update the "max amount" hint when type changes -->
+            <script type="text/javascript">
+                var _elig = {
+                    '50': '<t t-esc="&quot;%.3f&quot; % member.eligibility_50"/>',
+                    '75': '<t t-esc="&quot;%.3f&quot; % member.eligibility_75"/>'
+                };
+                function updateMaxAmount(radio) {
+                    var hint = document.getElementById('max_amount_hint');
+                    if (hint &amp;&amp; _elig[radio.value]) {
+                        hint.textContent = 'Maximum eligible: ' + _elig[radio.value] + ' JOD';
+                    }
+                }
+                // Run on load to set hint for pre-selected type
+                document.addEventListener('DOMContentLoaded', function() {
+                    var checked = document.querySelector('input[name="withdrawal_type"]:checked');
+                    if (checked) updateMaxAmount(checked);
+                });
+            </script>
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
          Withdrawal detail  /my/pfs/withdrawals/<id>
     ══════════════════════════════════════════════════════════════════════════ -->
     <template id="portal_pfs_withdrawal_detail" name="PFS: Withdrawal Detail">
@@ -871,11 +1144,62 @@
             </nav>
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
-                    <div class="d-flex align-items-center gap-3 mb-4">
+
+                    <!-- Title + badge -->
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
                         <h3 class="mb-0" t-out="withdrawal.name"/>
                         <t t-set="state_value" t-value="withdrawal.state"/>
                         <t t-call="zain_pfs.portal_pfs_state_badge"/>
                     </div>
+
+                    <!-- "Just created" confirmation banner -->
+                    <div t-if="just_created"
+                         class="alert alert-success alert-dismissible fade show">
+                        <i class="fa fa-check-circle me-2"/>
+                        Your withdrawal request has been saved as a draft.
+                        Review the details below and click
+                        <strong>Submit to HR</strong> when ready.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
+                    <!-- ── Employee action bar ───────────────────────────── -->
+                    <t t-if="withdrawal.state in ('draft', 'hr_review', 'approval_1', 'approval_2')">
+                        <div class="d-flex gap-2 mb-4">
+
+                            <!-- Submit to HR — only from draft -->
+                            <t t-if="withdrawal.state == 'draft'">
+                                <form t-attf-action="/my/pfs/withdrawals/#{withdrawal.id}/submit"
+                                      method="post" class="d-inline">
+                                    <input type="hidden" name="csrf_token"
+                                           t-att-value="request.csrf_token()"/>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-paper-plane me-1"/> Submit to HR
+                                    </button>
+                                </form>
+                            </t>
+
+                            <!-- Under review message -->
+                            <t t-if="withdrawal.state != 'draft'">
+                                <span class="align-self-center text-muted small">
+                                    <i class="fa fa-clock-o me-1"/>
+                                    Your request is under review. Contact HR for updates.
+                                </span>
+                            </t>
+
+                            <!-- Cancel -->
+                            <form t-attf-action="/my/pfs/withdrawals/#{withdrawal.id}/cancel"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Cancel this withdrawal request?')">
+                                <input type="hidden" name="csrf_token"
+                                       t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fa fa-times me-1"/> Cancel Request
+                                </button>
+                            </form>
+                        </div>
+                    </t>
+
+                    <!-- ── Request details ──────────────────────────────── -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-light fw-bold">Request Details</div>
                         <div class="card-body">
@@ -885,8 +1209,10 @@
                                     <span t-out="withdrawal.date"/>
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
-                                    <small class="text-muted d-block">Type</small>
-                                    <t t-if="withdrawal.withdrawal_type == '50'">50% Withdrawal</t>
+                                    <small class="text-muted d-block">Withdrawal Type</small>
+                                    <t t-if="withdrawal.withdrawal_type == '50'">
+                                        50% Withdrawal
+                                    </t>
                                     <t t-else="">75% Withdrawal</t>
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
@@ -902,9 +1228,51 @@
                                         Includes loan settlement
                                     </span>
                                 </div>
+                                <div class="col-sm-6 col-md-3 mb-3"
+                                     t-if="withdrawal.notes">
+                                    <small class="text-muted d-block">Notes</small>
+                                    <span t-out="withdrawal.notes"/>
+                                </div>
                             </div>
                         </div>
                     </div>
+
+                    <!-- ── Projected breakdown (draft / in-review) ─────── -->
+                    <t t-if="withdrawal.state in ('draft', 'hr_review', 'approval_1', 'approval_2')
+                              and withdrawal.withdrawal_type == '50'
+                              and withdrawal.is_loan_settlement">
+                        <div class="card border-info border-2 shadow-sm mb-4">
+                            <div class="card-header bg-info bg-opacity-10 fw-bold">
+                                Projected Breakdown (subject to final approval)
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-sm-4 mb-3">
+                                        <small class="text-muted d-block">Effective Amount</small>
+                                        <span>
+                                            <t t-esc="'%.3f' % withdrawal.net_amount"/> JOD
+                                        </span>
+                                    </div>
+                                    <div class="col-sm-4 mb-3">
+                                        <small class="text-muted d-block">
+                                            Loan Settlement
+                                        </small>
+                                        <span class="text-warning">
+                                            <t t-esc="'%.3f' % withdrawal.loan_settlement_amount"/> JOD
+                                        </span>
+                                    </div>
+                                    <div class="col-sm-4 mb-3">
+                                        <small class="text-muted d-block">Cash to You</small>
+                                        <strong class="text-success">
+                                            <t t-esc="'%.3f' % withdrawal.cash_amount"/> JOD
+                                        </strong>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <!-- ── Approval details ──────────────────────────────── -->
                     <t t-if="withdrawal.state == 'approved'">
                         <div class="card border-success border-2 shadow-sm mb-4">
                             <div class="card-header bg-success text-white fw-bold">
@@ -925,7 +1293,7 @@
                                     <div class="col-sm-6 col-md-3 mb-3"
                                          t-if="withdrawal.is_loan_settlement">
                                         <small class="text-muted d-block">
-                                            Loan Settlement Amount
+                                            Loan Settlement
                                         </small>
                                         <span>
                                             <t t-esc="'%.3f' % withdrawal.loan_settlement_amount"/> JOD
@@ -939,13 +1307,20 @@
                                     </div>
                                     <div class="col-sm-6 col-md-3 mb-3"
                                          t-if="withdrawal.lock_expiry_date">
-                                        <small class="text-muted d-block">Lock Expires On</small>
+                                        <small class="text-muted d-block">
+                                            Lock Period Expires
+                                        </small>
                                         <span t-out="withdrawal.lock_expiry_date"/>
+                                        <div class="form-text">
+                                            You may not make another 50% withdrawal
+                                            until this date.
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </t>
+
                     <a href="/my/pfs/withdrawals" class="btn btn-outline-secondary">
                         <i class="fa fa-arrow-left me-1"/> Back to Withdrawals
                     </a>

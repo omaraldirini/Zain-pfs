@@ -8,9 +8,9 @@ class PFSPortal(CustomerPortal):
     """Provident Fund self-service portal.
 
     Employees with portal/internal user access can view their own:
-      - Account dashboard (/my/pfs)
+      - Account dashboard    (/my/pfs)
       - Personal loans       (/my/pfs/loans, /my/pfs/loans/new, /my/pfs/loans/<id>)
-      - Withdrawals          (/my/pfs/withdrawals, /my/pfs/withdrawals/<id>)
+      - Withdrawals          (/my/pfs/withdrawals, /my/pfs/withdrawals/new, /my/pfs/withdrawals/<id>)
       - Land loans           (/my/pfs/land-loans, /my/pfs/land-loans/<id>)
     """
 
@@ -49,7 +49,6 @@ class PFSPortal(CustomerPortal):
         )
 
     def _loan_apply_render(self, member, errors=None, form_data=None):
-        """Render the loan application form, with optional validation errors."""
         config = request.env['zain.configuration'].sudo()._get_config()
         min_months = config.min_contribution_months
         active_loans = member.loan_ids.filtered(lambda l: l.state == 'active')
@@ -62,6 +61,22 @@ class PFSPortal(CustomerPortal):
             'errors': errors or {},
             'form_data': form_data or {},
             'page_name': 'pfs_loans',
+        })
+
+    def _withdrawal_apply_render(self, member, errors=None, form_data=None):
+        config = request.env['zain.configuration'].sudo()._get_config()
+        min_50 = config.withdrawal_50_min_months
+        min_75 = config.withdrawal_75_min_months
+        months = member.contribution_months
+        return request.render('zain_pfs.portal_withdrawal_apply', {
+            'member': member,
+            'min_50': min_50,
+            'min_75': min_75,
+            'can_50': member.state == 'active' and months >= min_50,
+            'can_75': member.state == 'active' and months >= min_75,
+            'errors': errors or {},
+            'form_data': form_data or {},
+            'page_name': 'pfs_withdrawals',
         })
 
     # ── Dashboard ────────────────────────────────────────────────────────────
@@ -115,7 +130,6 @@ class PFSPortal(CustomerPortal):
         if request.httprequest.method == 'GET':
             return self._loan_apply_render(member)
 
-        # ── POST: validate + create ──────────────────────────────────────────
         errors = {}
         try:
             loan_amount = float(post.get('loan_amount') or 0)
@@ -157,7 +171,6 @@ class PFSPortal(CustomerPortal):
         if errors:
             return self._loan_apply_render(member, errors=errors, form_data=post)
 
-        # Verify original_loan_id belongs to this member if provided
         vals = {
             'member_id': member.id,
             'loan_amount': loan_amount,
@@ -207,13 +220,11 @@ class PFSPortal(CustomerPortal):
             return request.redirect('/my/pfs')
 
         loan = member.loan_ids.filtered(lambda l: l.id == loan_id and l.state == 'draft')
-        if not loan:
-            return request.redirect('/my/pfs/loans/%d' % loan_id)
-
-        try:
-            loan.sudo().action_submit()
-        except (UserError, ValidationError):
-            pass  # redirect back; state unchanged, employee can see current state
+        if loan:
+            try:
+                loan.sudo().action_submit()
+            except (UserError, ValidationError):
+                pass
         return request.redirect('/my/pfs/loans/%d' % loan_id)
 
     @http.route('/my/pfs/loans/<int:loan_id>/cancel', type='http', auth='user',
@@ -228,10 +239,8 @@ class PFSPortal(CustomerPortal):
         loan = member.loan_ids.filtered(
             lambda l: l.id == loan_id and l.state in cancellable
         )
-        if not loan:
-            return request.redirect('/my/pfs/loans/%d' % loan_id)
-
-        loan.sudo().action_cancel()
+        if loan:
+            loan.sudo().action_cancel()
         return request.redirect('/my/pfs/loans')
 
     # ── Withdrawals ──────────────────────────────────────────────────────────
@@ -242,16 +251,88 @@ class PFSPortal(CustomerPortal):
         if not member:
             return request.redirect('/my/pfs')
 
+        config = request.env['zain.configuration'].sudo()._get_config()
+        months = member.contribution_months
         withdrawals = member.withdrawal_ids.sorted(key=lambda w: w.id, reverse=True)
+
+        # An active withdrawal request blocks new ones
+        has_active = member.withdrawal_ids.filtered(
+            lambda w: w.state not in ('approved', 'cancelled')
+        )
         return request.render('zain_pfs.portal_pfs_withdrawals', {
             'member': member,
             'withdrawals': withdrawals,
+            'can_50': (member.state == 'active'
+                       and months >= config.withdrawal_50_min_months
+                       and member.eligibility_50 > 0),
+            'can_75': (member.state == 'active'
+                       and months >= config.withdrawal_75_min_months
+                       and member.eligibility_75 > 0),
+            'has_active_request': bool(has_active),
             'page_name': 'pfs_withdrawals',
         })
 
+    @http.route('/my/pfs/withdrawals/new', type='http', auth='user', website=True,
+                methods=['GET', 'POST'])
+    def portal_pfs_withdrawal_new(self, **post):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        if request.httprequest.method == 'GET':
+            return self._withdrawal_apply_render(member)
+
+        # ── POST: validate + create ──────────────────────────────────────────
+        errors = {}
+        withdrawal_type = post.get('withdrawal_type', '').strip()
+        if withdrawal_type not in ('50', '75'):
+            errors['withdrawal_type'] = 'Please select a withdrawal type.'
+
+        try:
+            requested_amount = float(post.get('requested_amount') or 0)
+        except (ValueError, TypeError):
+            requested_amount = 0.0
+            errors['requested_amount'] = 'Enter a valid number.'
+
+        notes = (post.get('notes') or '').strip()
+
+        if not errors.get('requested_amount') and requested_amount <= 0:
+            errors['requested_amount'] = 'Requested amount must be greater than zero.'
+
+        # Check contribution months eligibility
+        if not errors.get('withdrawal_type') and withdrawal_type:
+            config = request.env['zain.configuration'].sudo()._get_config()
+            months = member.contribution_months
+            if withdrawal_type == '50' and months < config.withdrawal_50_min_months:
+                errors['withdrawal_type'] = (
+                    'You need at least %d contribution months for a 50%% withdrawal '
+                    '(you have %d).' % (config.withdrawal_50_min_months, months)
+                )
+            if withdrawal_type == '75' and months < config.withdrawal_75_min_months:
+                errors['withdrawal_type'] = (
+                    'You need at least %d contribution months for a 75%% withdrawal '
+                    '(you have %d).' % (config.withdrawal_75_min_months, months)
+                )
+
+        if errors:
+            return self._withdrawal_apply_render(member, errors=errors, form_data=post)
+
+        try:
+            withdrawal = request.env['zain.withdrawal'].sudo().create({
+                'member_id': member.id,
+                'withdrawal_type': withdrawal_type,
+                'requested_amount': requested_amount,
+                'notes': notes,
+            })
+        except (UserError, ValidationError) as e:
+            errors['_general'] = str(e)
+            return self._withdrawal_apply_render(member, errors=errors, form_data=post)
+
+        return request.redirect('/my/pfs/withdrawals/%d?created=1' % withdrawal.id)
+
     @http.route('/my/pfs/withdrawals/<int:withdrawal_id>', type='http', auth='user',
                 website=True)
-    def portal_pfs_withdrawal_detail(self, withdrawal_id, **kwargs):
+    def portal_pfs_withdrawal_detail(self, withdrawal_id, created=None, **kwargs):
         member = self._get_portal_member()
         if not member:
             return request.redirect('/my/pfs')
@@ -263,8 +344,41 @@ class PFSPortal(CustomerPortal):
         return request.render('zain_pfs.portal_pfs_withdrawal_detail', {
             'member': member,
             'withdrawal': withdrawal,
+            'just_created': bool(created),
             'page_name': 'pfs_withdrawals',
         })
+
+    @http.route('/my/pfs/withdrawals/<int:withdrawal_id>/submit', type='http',
+                auth='user', website=True, methods=['POST'])
+    def portal_pfs_withdrawal_submit(self, withdrawal_id, **post):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        withdrawal = member.withdrawal_ids.filtered(
+            lambda w: w.id == withdrawal_id and w.state == 'draft'
+        )
+        if withdrawal:
+            try:
+                withdrawal.sudo().action_submit()
+            except (UserError, ValidationError):
+                pass
+        return request.redirect('/my/pfs/withdrawals/%d' % withdrawal_id)
+
+    @http.route('/my/pfs/withdrawals/<int:withdrawal_id>/cancel', type='http',
+                auth='user', website=True, methods=['POST'])
+    def portal_pfs_withdrawal_cancel(self, withdrawal_id, **post):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        cancellable = ('draft', 'hr_review', 'approval_1', 'approval_2')
+        withdrawal = member.withdrawal_ids.filtered(
+            lambda w: w.id == withdrawal_id and w.state in cancellable
+        )
+        if withdrawal:
+            withdrawal.sudo().action_cancel()
+        return request.redirect('/my/pfs/withdrawals')
 
     # ── Land Loans ───────────────────────────────────────────────────────────
 
