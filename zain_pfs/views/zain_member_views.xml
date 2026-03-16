@@ -19,12 +19,12 @@
                     <div class="oe_button_box" name="button_box">
                         <button name="%(action_zain_loan)d" type="action" class="oe_stat_button"
                                 icon="fa-money"
-                                context="{'default_member_id': active_id, 'search_default_member_id': active_id}">
+                                context="{'default_member_id': id, 'search_default_member_id': id}">
                             <field name="active_loan_count" widget="statinfo" string="Active Loans"/>
                         </button>
                         <button name="%(action_zain_withdrawal)d" type="action" class="oe_stat_button"
                                 icon="fa-arrow-circle-o-down"
-                                context="{'default_member_id': active_id, 'search_default_member_id': active_id}">
+                                context="{'default_member_id': id, 'search_default_member_id': id}">
                             <div class="o_stat_info">
                                 <span class="o_stat_text">Withdrawals</span>
                             </div>
