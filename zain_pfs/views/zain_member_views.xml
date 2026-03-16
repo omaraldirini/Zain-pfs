@@ -193,8 +193,6 @@
                 <filter name="active" string="Active" domain="[('state','=','active')]"/>
                 <filter name="resigned" string="Resigned" domain="[('state','=','resigned')]"/>
                 <filter name="terminated" string="Terminated" domain="[('state','=','terminated')]"/>
-                <separator/>
-                <filter name="has_loan" string="Has Active Loan" domain="[('active_loan_count','>',0)]"/>
                 <group>
                     <filter name="group_department" string="Department"
                             context="{'group_by': 'department_id'}"/>
