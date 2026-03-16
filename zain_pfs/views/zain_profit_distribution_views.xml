@@ -1,56 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ── Form view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_profit_distribution_form" model="ir.ui.view">
         <field name="name">zain.profit.distribution.form</field>
         <field name="model">zain.profit.distribution</field>
         <field name="arch" type="xml">
             <form>
                 <header>
-                    <button name="action_generate_lines" string="Generate Member Lines" type="object"
+                    <button name="action_generate_lines" string="Generate Member Lines"
+                            type="object"
                             invisible="state != 'draft'"
                             groups="zain_pfs.group_pfs_fund_admin"/>
-                    <button name="action_submit_for_approval" string="Submit for Committee Approval" type="object"
+                    <button name="action_submit_for_approval"
+                            string="Submit for Committee Approval"
+                            type="object"
                             invisible="state != 'draft'"
                             groups="zain_pfs.group_pfs_fund_admin"
                             class="btn-primary"/>
-                    <button name="action_approve" string="Approve Distribution" type="object"
+                    <button name="action_approve" string="Approve Distribution"
+                            type="object"
                             invisible="state != 'pending_approval'"
                             groups="zain_pfs.group_pfs_fund_committee"
                             class="btn-primary"/>
-                    <button name="action_post" string="Post to Accounts" type="object"
+                    <button name="action_post" string="Post to Accounts"
+                            type="object"
                             invisible="state != 'approved'"
                             groups="zain_pfs.group_pfs_fund_admin"/>
-                    <button name="action_reset_draft" string="Reset to Draft" type="object"
-                            invisible="state not in ('pending_approval',)"
+                    <button name="action_reset_draft" string="Reset to Draft"
+                            type="object"
+                            invisible="state not in ('pending_approval', 'approved')"
                             groups="zain_pfs.group_pfs_system_admin"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,pending_approval,approved,posted"/>
                 </header>
+
                 <sheet>
+                    <!-- Stat buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_generate_lines"
+                                icon="fa-users"
+                                invisible="state != 'draft'">
+                            <field name="line_count" widget="statinfo" string="Members"/>
+                        </button>
+                        <div class="oe_stat_button" icon="fa-money"
+                             invisible="line_count == 0">
+                            <div class="o_stat_info">
+                                <field name="total_profit_distributed"
+                                       widget="statinfo" string="Distributed (JOD)"/>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
+
+                    <!-- Rounding difference warning -->
+                    <div class="alert alert-warning" role="alert"
+                         invisible="line_count == 0 or distribution_diff &gt;= -0.01 and distribution_diff &lt;= 0.01">
+                        <strong>Rounding Difference:</strong>
+                        <field name="distribution_diff" readonly="1"/> JOD between
+                        Total Profit and Total Distributed. Review member lines.
+                    </div>
+
+                    <!-- ── Header fields ─────────────────────────────────────── -->
                     <group>
-                        <group>
-                            <field name="fiscal_year"/>
-                            <field name="date"/>
-                            <field name="total_profit"/>
+                        <group string="Fiscal Year">
+                            <field name="fiscal_year"
+                                   readonly="state != 'draft'"/>
+                            <field name="fiscal_year_start"
+                                   readonly="state != 'draft'"/>
+                            <field name="fiscal_year_end"
+                                   readonly="state != 'draft'"/>
+                            <field name="date"
+                                   readonly="state == 'posted'"/>
                         </group>
-                        <group>
+                        <group string="Profit">
+                            <field name="total_profit"
+                                   readonly="state != 'draft'"/>
                             <field name="total_avg_balance" readonly="1"/>
-                            <field name="approved_by" readonly="1"
-                                   invisible="not approved_by"/>
+                            <field name="total_profit_distributed" readonly="1"/>
+                            <field name="distribution_diff" readonly="1"/>
                         </group>
                     </group>
+
+                    <!-- ── Approval / posting info ───────────────────────────── -->
+                    <group string="Approval"
+                           invisible="state not in ('approved', 'posted')">
+                        <field name="approved_by" readonly="1"/>
+                        <field name="approval_date" readonly="1"/>
+                        <field name="posting_date" readonly="1"
+                               invisible="not posting_date"/>
+                    </group>
+
                     <field name="notes" placeholder="Notes..."/>
+
+                    <!-- ── Member lines ──────────────────────────────────────── -->
                     <notebook>
-                        <page string="Member Distribution Lines">
-                            <field name="line_ids">
-                                <list editable="bottom">
+                        <page string="Member Distribution Lines" name="lines">
+                            <field name="line_ids"
+                                   readonly="state in ('approved', 'posted')">
+                                <list editable="bottom"
+                                      decoration-muted="avg_monthly_balance == 0">
                                     <field name="member_id"/>
+                                    <field name="employee_id" optional="show" readonly="1"/>
+                                    <field name="department_id" optional="show" readonly="1"/>
                                     <field name="avg_monthly_balance"/>
-                                    <field name="share_percent" readonly="1"/>
+                                    <field name="share_percent" readonly="1"
+                                           string="Share %" digits="[16,4]"/>
                                     <field name="profit_amount" readonly="1"/>
                                     <field name="posted" readonly="1"/>
                                 </list>
@@ -63,25 +122,62 @@
         </field>
     </record>
 
+    <!-- ── List view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_profit_distribution_list" model="ir.ui.view">
         <field name="name">zain.profit.distribution.list</field>
         <field name="model">zain.profit.distribution</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-success="state == 'posted'"
+                  decoration-info="state == 'approved'"
+                  decoration-muted="state == 'draft'">
                 <field name="name"/>
                 <field name="fiscal_year"/>
+                <field name="fiscal_year_start" optional="hide"/>
+                <field name="fiscal_year_end" optional="hide"/>
                 <field name="date"/>
                 <field name="total_profit"/>
+                <field name="line_count" string="Members"/>
                 <field name="total_avg_balance"/>
+                <field name="total_profit_distributed"/>
+                <field name="distribution_diff" optional="hide"/>
+                <field name="approval_date" optional="hide"/>
                 <field name="state"/>
             </list>
         </field>
     </record>
 
+    <!-- ── Search view ───────────────────────────────────────────────────── -->
+    <record id="view_zain_profit_distribution_search" model="ir.ui.view">
+        <field name="name">zain.profit.distribution.search</field>
+        <field name="model">zain.profit.distribution</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="name"/>
+                <field name="fiscal_year"/>
+                <filter name="draft" string="Draft"
+                        domain="[('state','=','draft')]"/>
+                <filter name="pending" string="Pending Approval"
+                        domain="[('state','=','pending_approval')]"/>
+                <filter name="approved" string="Approved"
+                        domain="[('state','=','approved')]"/>
+                <filter name="posted" string="Posted"
+                        domain="[('state','=','posted')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_fiscal_year" string="Fiscal Year"
+                            context="{'group_by': 'fiscal_year'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────────── -->
     <record id="action_zain_profit_distribution" model="ir.actions.act_window">
         <field name="name">Profit Distribution</field>
         <field name="res_model">zain.profit.distribution</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zain_profit_distribution_search"/>
     </record>
 
 </odoo>
