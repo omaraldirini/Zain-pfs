@@ -162,7 +162,7 @@
                         domain="[('state','=','approved')]"/>
                 <filter name="posted" string="Posted"
                         domain="[('state','=','posted')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_fiscal_year" string="Fiscal Year"
                             context="{'group_by': 'fiscal_year'}"/>
                     <filter name="group_state" string="Status"

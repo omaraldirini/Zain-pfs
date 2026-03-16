@@ -164,7 +164,7 @@
                         domain="[('reason','=','fraud')]"/>
                 <filter name="death" string="Death"
                         domain="[('reason','=','death')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_reason" string="Reason"
                             context="{'group_by': 'reason'}"/>
                     <filter name="group_state" string="Status"

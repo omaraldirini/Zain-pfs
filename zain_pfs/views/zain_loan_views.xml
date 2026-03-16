@@ -192,7 +192,7 @@
                 <separator/>
                 <filter name="paid" string="Paid"
                         domain="[('state','=','paid')]"/>
-                <group expand="0" string="Group By">
+                <group>
                     <filter name="group_member" string="Member"
                             context="{'group_by': 'member_id'}"/>
                     <filter name="group_state" string="Status"
