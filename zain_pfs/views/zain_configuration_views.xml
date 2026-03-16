@@ -1,28 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ── Form view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_configuration_form" model="ir.ui.view">
         <field name="name">zain.configuration.form</field>
         <field name="model">zain.configuration</field>
         <field name="arch" type="xml">
-            <form string="PFS Configuration">
+            <form string="PFS Settings">
                 <sheet>
+                    <div class="oe_title">
+                        <h1>Provident Fund Settings</h1>
+                    </div>
+
+                    <!-- ── Contribution Eligibility ──────────────────────── -->
                     <group string="Contribution Eligibility">
-                        <field name="min_contribution_months"/>
-                        <field name="withdrawal_50_min_months"/>
-                        <field name="withdrawal_75_min_months"/>
+                        <group>
+                            <field name="min_contribution_months"
+                                   help="Minimum posted contribution months required to apply for a personal loan or withdrawal."/>
+                            <field name="withdrawal_50_min_months"
+                                   help="Minimum months required to be eligible for a 50% partial withdrawal."/>
+                            <field name="withdrawal_75_min_months"
+                                   help="Minimum months (20 years = 240) required to be eligible for a 75% partial withdrawal."/>
+                        </group>
                     </group>
+
+                    <!-- ── Loan Rules ─────────────────────────────────────── -->
                     <group string="Loan Rules">
-                        <field name="loan_installment_cap" widget="percentage"/>
-                        <field name="min_remaining_salary"/>
-                        <field name="loan_admin_fees"/>
-                        <field name="loan_admin_fees_threshold"/>
-                        <field name="reschedule_fees"/>
+                        <group>
+                            <field name="loan_installment_cap" widget="percentage"
+                                   help="Maximum fraction of average income consumed by all loan installments combined (0.50 = 50%)."/>
+                            <field name="min_remaining_salary"
+                                   help="After all deductions the employee must retain at least this amount (JOD)."/>
+                        </group>
+                        <group>
+                            <field name="loan_admin_fees_threshold"
+                                   help="Admin fees are charged only when the loan amount exceeds this threshold."/>
+                            <field name="loan_admin_fees"
+                                   help="Fixed admin fee charged on loans that exceed the threshold (JOD)."/>
+                            <field name="reschedule_fees"
+                                   help="Fixed fee charged when a loan is rescheduled or bought out (JOD)."/>
+                        </group>
                     </group>
-                    <group string="Vesting Schedule">
+
+                    <!-- ── Vesting Schedule ───────────────────────────────── -->
+                    <group string="Vesting Schedule (Company Contributions on Resignation)">
                         <group string="Tier 1">
-                            <field name="vesting_tier_1_months"/>
-                            <field name="vesting_tier_1_percent" widget="percentage"/>
+                            <field name="vesting_tier_1_months"
+                                   help="Minimum contribution months for Tier 1 vesting."/>
+                            <field name="vesting_tier_1_percent" widget="percentage"
+                                   help="Entitlement to company contributions at Tier 1 (e.g. 0.60 = 60%)."/>
                         </group>
                         <group string="Tier 2">
                             <field name="vesting_tier_2_months"/>
@@ -33,20 +59,39 @@
                             <field name="vesting_tier_3_percent" widget="percentage"/>
                         </group>
                     </group>
-                    <group string="Withdrawal Lock Periods">
-                        <field name="withdrawal_lock_loan_years"/>
-                        <field name="withdrawal_lock_cash_years"/>
+
+                    <!-- ── Withdrawal Lock Periods ────────────────────────── -->
+                    <group string="50% Withdrawal Lock Periods">
+                        <group>
+                            <field name="withdrawal_lock_loan_years"
+                                   help="Years a member must wait before making another 50% withdrawal when used for loan settlement."/>
+                            <field name="withdrawal_lock_cash_years"
+                                   help="Years a member must wait before making another 50% withdrawal when taken as cash."/>
+                        </group>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
-    <record id="action_zain_configuration" model="ir.actions.act_window">
-        <field name="name">PFS Configuration</field>
-        <field name="res_model">zain.configuration</field>
-        <field name="view_mode">form</field>
-        <field name="res_id">1</field>
+    <!-- ── Action ────────────────────────────────────────────────────────── -->
+    <!-- Server action: fetches (or creates) the singleton then opens form view -->
+    <record id="action_zain_configuration" model="ir.actions.server">
+        <field name="name">PFS Settings</field>
+        <field name="model_id" ref="model_zain_configuration"/>
+        <field name="state">code</field>
+        <field name="code">
+config = env['zain.configuration']._get_config()
+action = {
+    'type': 'ir.actions.act_window',
+    'name': 'PFS Settings',
+    'res_model': 'zain.configuration',
+    'res_id': config.id,
+    'view_mode': 'form',
+    'views': [(False, 'form')],
+    'target': 'current',
+}
+        </field>
     </record>
 
 </odoo>

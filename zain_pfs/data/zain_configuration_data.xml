@@ -38,7 +38,7 @@
             <field name="padding">5</field>
         </record>
 
-        <!-- Default configuration record -->
+        <!-- Default configuration record (singleton – only one record allowed) -->
         <record id="zain_configuration_default" model="zain.configuration">
             <field name="min_contribution_months">36</field>
             <field name="withdrawal_50_min_months">60</field>
