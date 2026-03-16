@@ -340,7 +340,7 @@ class ZainLoanLine(models.Model):
     sequence = fields.Integer(default=1)
     date = fields.Date(string='Due Date')
     amount = fields.Float(string='Installment Amount (JOD)')
-    paid = fields.Boolean(string='Paid', default=False, tracking=False)
+    paid = fields.Boolean(string='Paid', default=False)
     payment_date = fields.Date(string='Payment Date')
 
     @api.onchange('paid')

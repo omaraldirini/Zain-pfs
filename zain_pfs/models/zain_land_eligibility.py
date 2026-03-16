@@ -42,7 +42,7 @@ class ZainLandEligibility(models.Model):
         ('offered', 'Plot Offered'),
         ('completed', 'Completed'),
         ('removed', 'Removed'),
-    ], default='waiting', string='Status', required=True, tracking=True)
+    ], default='waiting', string='Status', required=True)
 
     offered_land_id = fields.Many2one(
         'zain.land', string='Offered Plot',
@@ -56,8 +56,8 @@ class ZainLandEligibility(models.Model):
         string='Enrolment Date', default=fields.Date.today,
     )
 
-    _member_active_uniq = models.Constraint(
-        "UNIQUE(member_id, state) WHERE state NOT IN ('completed', 'removed')",
+    _member_active_uniq = models.UniqueIndex(
+        "(member_id, state) WHERE state NOT IN ('completed', 'removed')",
         'A member can only appear once in the active eligibility queue.',
     )
 
