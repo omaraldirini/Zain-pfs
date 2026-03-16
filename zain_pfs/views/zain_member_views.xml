@@ -8,10 +8,30 @@
         <field name="arch" type="xml">
             <form>
                 <header>
+                    <button name="%(action_zain_resignation)d" string="Process Resignation"
+                            type="action" invisible="state != 'active'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="active,resigned,terminated"/>
                 </header>
                 <sheet>
+                    <!-- ── Header info bar ──────────────────────────────────── -->
+                    <div class="oe_button_box" name="button_box">
+                        <button name="%(action_zain_loan)d" type="action" class="oe_stat_button"
+                                icon="fa-money"
+                                context="{'default_member_id': active_id, 'search_default_member_id': active_id}">
+                            <field name="active_loan_count" widget="statinfo" string="Active Loans"/>
+                        </button>
+                        <button name="%(action_zain_withdrawal)d" type="action" class="oe_stat_button"
+                                icon="fa-arrow-circle-o-down"
+                                context="{'default_member_id': active_id, 'search_default_member_id': active_id}">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Withdrawals</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <!-- ── Employee information ──────────────────────────────── -->
                     <group string="Employee Information">
                         <group>
                             <field name="employee_id"/>
@@ -22,37 +42,64 @@
                         <group>
                             <field name="join_date"/>
                             <field name="fund_join_date"/>
-                            <field name="contribution_months"/>
+                            <field name="contribution_months" string="Contribution Months (Posted)"/>
                         </group>
                     </group>
 
+                    <!-- ── Balance inquiry ───────────────────────────────────── -->
                     <group string="Balance Inquiry">
+                        <field name="as_of_date" colspan="1"/>
+                    </group>
+
+                    <group string="Balance Summary">
                         <group>
-                            <field name="as_of_date"/>
+                            <field name="employee_contribution" readonly="1"/>
+                            <field name="company_contribution" readonly="1"/>
+                            <field name="total_profits" readonly="1"/>
+                            <field name="total_withdrawn" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="current_balance" readonly="1"
+                                   widget="monetary"
+                                   options="{'currency_field': false}"/>
                         </group>
                     </group>
 
-                    <group string="Balance Summary" col="4">
-                        <field name="employee_contribution" readonly="1"/>
-                        <field name="company_contribution" readonly="1"/>
-                        <field name="total_profits" readonly="1"/>
-                        <field name="total_withdrawn" readonly="1"/>
-                        <field name="current_balance" readonly="1"/>
-                    </group>
-
-                    <group string="Loan Summary">
-                        <field name="active_loan_count" readonly="1"/>
-                        <field name="loan_balance" readonly="1"/>
+                    <group string="Loans">
+                        <field name="loan_balance" readonly="1" string="Personal Loan Balance"/>
                         <field name="land_loan_balance" readonly="1"/>
                     </group>
 
-                    <group string="Eligibility">
+                    <group string="Withdrawal Eligibility">
                         <field name="eligibility_50" readonly="1" string="Eligibility (50%)"/>
                         <field name="eligibility_75" readonly="1" string="Eligibility (75%)"/>
                     </group>
 
+                    <!-- ── Tabs ──────────────────────────────────────────────── -->
                     <notebook>
-                        <page string="Loans" name="loans">
+
+                        <page string="Contributions" name="contributions">
+                            <field name="contribution_ids">
+                                <list editable="bottom"
+                                      decoration-muted="state == 'draft'"
+                                      decoration-success="state == 'posted'">
+                                    <field name="date" string="Month"/>
+                                    <field name="employee_amount"/>
+                                    <field name="company_amount"/>
+                                    <field name="total" readonly="1"/>
+                                    <field name="notes"/>
+                                    <field name="state"/>
+                                    <button name="action_post" string="Post" type="object"
+                                            icon="fa-check" invisible="state == 'posted'"
+                                            groups="zain_pfs.group_pfs_fund_admin"/>
+                                    <button name="action_reset_draft" string="Reset" type="object"
+                                            icon="fa-undo" invisible="state == 'draft'"
+                                            groups="zain_pfs.group_pfs_fund_admin"/>
+                                </list>
+                            </field>
+                        </page>
+
+                        <page string="Personal Loans" name="loans">
                             <field name="loan_ids" readonly="1">
                                 <list>
                                     <field name="name"/>
@@ -64,6 +111,7 @@
                                 </list>
                             </field>
                         </page>
+
                         <page string="Withdrawals" name="withdrawals">
                             <field name="withdrawal_ids" readonly="1">
                                 <list>
@@ -72,10 +120,12 @@
                                     <field name="withdrawal_type"/>
                                     <field name="requested_amount"/>
                                     <field name="approved_amount"/>
+                                    <field name="approved_date"/>
                                     <field name="state"/>
                                 </list>
                             </field>
                         </page>
+
                         <page string="Land Loans" name="land_loans">
                             <field name="land_loan_ids" readonly="1">
                                 <list>
@@ -87,6 +137,19 @@
                                 </list>
                             </field>
                         </page>
+
+                        <page string="Profit Distribution" name="profits">
+                            <field name="profit_distribution_line_ids" readonly="1">
+                                <list>
+                                    <field name="distribution_id"/>
+                                    <field name="avg_monthly_balance"/>
+                                    <field name="share_percent" string="Share %"/>
+                                    <field name="profit_amount"/>
+                                    <field name="posted"/>
+                                </list>
+                            </field>
+                        </page>
+
                     </notebook>
                 </sheet>
                 <chatter/>
@@ -99,14 +162,20 @@
         <field name="name">zain.member.list</field>
         <field name="model">zain.member</field>
         <field name="arch" type="xml">
-            <list>
+            <list decoration-success="state == 'active'"
+                  decoration-muted="state in ('resigned','terminated')">
                 <field name="employee_id"/>
                 <field name="employee_number"/>
                 <field name="department_id"/>
                 <field name="fund_join_date"/>
                 <field name="contribution_months"/>
+                <field name="employee_contribution" optional="hide"/>
+                <field name="company_contribution" optional="hide"/>
+                <field name="total_profits" optional="hide"/>
                 <field name="current_balance"/>
                 <field name="loan_balance"/>
+                <field name="eligibility_50"/>
+                <field name="eligibility_75"/>
                 <field name="state"/>
             </list>
         </field>
@@ -123,9 +192,14 @@
                 <field name="department_id"/>
                 <filter name="active" string="Active" domain="[('state','=','active')]"/>
                 <filter name="resigned" string="Resigned" domain="[('state','=','resigned')]"/>
+                <filter name="terminated" string="Terminated" domain="[('state','=','terminated')]"/>
+                <separator/>
+                <filter name="has_loan" string="Has Active Loan" domain="[('active_loan_count','>',0)]"/>
                 <group expand="1" string="Group By">
                     <filter name="group_department" string="Department"
                             context="{'group_by': 'department_id'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
                 </group>
             </search>
         </field>
@@ -137,6 +211,7 @@
         <field name="res_model">zain.member</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_zain_member_search"/>
+        <field name="context">{'search_default_active': 1}</field>
     </record>
 
 </odoo>

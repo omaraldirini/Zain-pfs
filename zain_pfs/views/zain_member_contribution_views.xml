@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Standalone list (Fund Admin – all members) ─────────────────────── -->
+    <record id="view_zain_member_contribution_list" model="ir.ui.view">
+        <field name="name">zain.member.contribution.list</field>
+        <field name="model">zain.member.contribution</field>
+        <field name="arch" type="xml">
+            <list decoration-muted="state == 'draft'"
+                  decoration-success="state == 'posted'">
+                <field name="member_id"/>
+                <field name="date" string="Month"/>
+                <field name="employee_amount"/>
+                <field name="company_amount"/>
+                <field name="total"/>
+                <field name="notes"/>
+                <field name="state"/>
+                <button name="action_post" string="Post" type="object"
+                        icon="fa-check" invisible="state == 'posted'"
+                        groups="zain_pfs.group_pfs_fund_admin"/>
+                <button name="action_reset_draft" string="Reset" type="object"
+                        icon="fa-undo" invisible="state == 'draft'"
+                        groups="zain_pfs.group_pfs_fund_admin"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="view_zain_member_contribution_form" model="ir.ui.view">
+        <field name="name">zain.member.contribution.form</field>
+        <field name="model">zain.member.contribution</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_post" string="Post" type="object"
+                            invisible="state == 'posted'"
+                            class="btn-primary"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state == 'draft'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,posted"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="member_id"/>
+                            <field name="date" string="Contribution Month"/>
+                        </group>
+                        <group>
+                            <field name="employee_amount"/>
+                            <field name="company_amount"/>
+                            <field name="total" readonly="1"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_member_contribution_search" model="ir.ui.view">
+        <field name="name">zain.member.contribution.search</field>
+        <field name="model">zain.member.contribution</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="member_id"/>
+                <filter name="draft" string="Draft" domain="[('state','=','draft')]"/>
+                <filter name="posted" string="Posted" domain="[('state','=','posted')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_member" string="Member"
+                            context="{'group_by': 'member_id'}"/>
+                    <filter name="group_date" string="Month"
+                            context="{'group_by': 'date:month'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_zain_member_contribution" model="ir.actions.act_window">
+        <field name="name">Contributions</field>
+        <field name="res_model">zain.member.contribution</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zain_member_contribution_search"/>
+    </record>
+
+</odoo>

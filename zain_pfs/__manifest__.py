@@ -10,6 +10,7 @@
         'security/ir.model.access.csv',
         'data/zain_configuration_data.xml',
         'views/zain_member_views.xml',
+        'views/zain_member_contribution_views.xml',
         'views/zain_loan_views.xml',
         'views/zain_withdrawal_views.xml',
         'views/zain_land_views.xml',

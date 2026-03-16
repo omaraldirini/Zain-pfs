@@ -6,6 +6,10 @@ access_zain_member_admin,zain.member admin,model_zain_member,group_pfs_fund_admi
 access_zain_member_hr,zain.member hr,model_zain_member,group_pfs_hr,1,1,0,0
 access_zain_member_employee,zain.member employee,model_zain_member,group_pfs_employee,1,0,0,0
 
+access_zain_member_contribution_admin,zain.member.contribution admin,model_zain_member_contribution,group_pfs_fund_admin,1,1,1,1
+access_zain_member_contribution_hr,zain.member.contribution hr,model_zain_member_contribution,group_pfs_hr,1,1,1,0
+access_zain_member_contribution_employee,zain.member.contribution employee,model_zain_member_contribution,group_pfs_employee,1,0,0,0
+
 access_zain_loan_admin,zain.loan admin,model_zain_loan,group_pfs_fund_admin,1,1,1,1
 access_zain_loan_hr,zain.loan hr,model_zain_loan,group_pfs_hr,1,1,0,0
 access_zain_loan_employee,zain.loan employee,model_zain_loan,group_pfs_employee,1,1,1,0

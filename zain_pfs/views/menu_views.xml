@@ -19,6 +19,12 @@
               parent="menu_zain_pfs_members"
               action="action_zain_member"
               sequence="10"/>
+    <menuitem id="menu_zain_member_contribution"
+              name="Contributions"
+              parent="menu_zain_pfs_members"
+              action="action_zain_member_contribution"
+              sequence="20"
+              groups="zain_pfs.group_pfs_fund_admin"/>
 
     <!-- ── Loans ─────────────────────────────────────────────────────────── -->
     <menuitem id="menu_zain_pfs_loans"
