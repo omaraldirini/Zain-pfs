@@ -21,9 +21,6 @@
          Shared: breadcrumb macro
     ══════════════════════════════════════════════════════════════════════════ -->
     <template id="portal_pfs_breadcrumb" name="PFS breadcrumb macro">
-        <!-- Usage: <t t-call="zain_pfs.portal_pfs_breadcrumb">
-                       <t t-set="crumbs">[('Provident Fund','/my/pfs'), ('Loans',None)]</t>
-                   </t>                                                        -->
         <ol class="breadcrumb">
             <li class="breadcrumb-item"><a href="/my">My Account</a></li>
             <t t-foreach="crumbs" t-as="crumb">
@@ -39,15 +36,37 @@
 
     <!-- ══════════════════════════════════════════════════════════════════════
          Shared: state badge macro
+         Set t-set="state_value" before calling.
+         Human-readable labels are resolved from an internal map.
     ══════════════════════════════════════════════════════════════════════════ -->
     <template id="portal_pfs_state_badge" name="PFS state badge macro">
-        <!-- t-set="state_value" before calling -->
-        <span t-attf-class="badge rounded-pill
-            #{state_value in ('active','approved','paid') and 'bg-success' or ''}
-            #{state_value in ('draft',) and 'bg-secondary' or ''}
-            #{state_value in ('submitted','hr_review','preparation','approval_1','approval_2','pending_payment') and 'bg-warning text-dark' or ''}
-            #{state_value in ('cancelled',) and 'bg-danger' or ''}">
-            <t t-out="state_value"/>
+        <t t-set="_labels" t-value="{
+            'draft':           'Draft',
+            'submitted':       'Submitted to HR',
+            'preparation':     'In Preparation',
+            'approval_1':      'Approval #1',
+            'approval_2':      'Approval #2',
+            'pending_payment': 'Pending Payment',
+            'active':          'Active',
+            'paid':            'Paid',
+            'cancelled':       'Cancelled',
+            'hr_review':       'HR Review',
+            'approved':        'Approved',
+            'waiting':         'Waiting',
+            'offered':         'Plot Offered',
+            'completed':       'Completed',
+            'removed':         'Removed',
+            'resigned':        'Resigned',
+            'terminated':      'Terminated',
+        }"/>
+        <t t-set="_color" t-value="
+            'bg-success'              if state_value in ('active', 'approved', 'paid', 'completed') else
+            'bg-warning text-dark'    if state_value in ('submitted', 'hr_review', 'preparation', 'approval_1', 'approval_2', 'pending_payment', 'offered') else
+            'bg-danger'               if state_value in ('cancelled', 'removed', 'terminated') else
+            'bg-secondary'
+        "/>
+        <span t-attf-class="badge rounded-pill #{_color}">
+            <t t-out="_labels.get(state_value, state_value)"/>
         </span>
     </template>
 
@@ -86,7 +105,6 @@
                     <t t-set="crumbs" t-value="[('Provident Fund', None)]"/>
                 </t>
             </nav>
-
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
                     <h2 class="mb-4">
@@ -94,7 +112,7 @@
                         Provident Fund – My Account
                     </h2>
 
-                    <!-- ── Member info strip ──────────────────────────────── -->
+                    <!-- Member info strip -->
                     <div class="card mb-4 border-0 shadow-sm">
                         <div class="card-body">
                             <div class="row">
@@ -122,7 +140,7 @@
                         </div>
                     </div>
 
-                    <!-- ── Balance summary cards ──────────────────────────── -->
+                    <!-- Balance summary cards -->
                     <div class="row g-3 mb-4">
                         <div class="col-sm-6 col-lg-3">
                             <div class="card text-center border-0 shadow-sm h-100">
@@ -166,7 +184,7 @@
                         </div>
                     </div>
 
-                    <!-- ── Current balance + eligibility ─────────────────── -->
+                    <!-- Current balance + eligibility -->
                     <div class="row g-3 mb-4">
                         <div class="col-md-4">
                             <div class="card border-primary border-2 shadow-sm h-100">
@@ -200,24 +218,23 @@
                         </div>
                     </div>
 
-                    <!-- ── Quick links ────────────────────────────────────── -->
+                    <!-- Quick links -->
                     <div class="row g-3">
-                        <div class="col-sm-6 col-lg-3">
+                        <div class="col-sm-6 col-lg-4">
                             <a href="/my/pfs/loans" class="card border-0 shadow-sm text-decoration-none h-100">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <i class="fa fa-2x fa-money text-primary"/>
                                     <div>
                                         <strong>Personal Loans</strong>
                                         <p class="text-muted mb-0 small">
-                                            <t t-out="len(active_loans)"/> active
-                                            · balance
-                                            <t t-esc="'%.3f' % member.loan_balance"/> JOD
+                                            <t t-out="len(active_loans)"/> active ·
+                                            balance <t t-esc="'%.3f' % member.loan_balance"/> JOD
                                         </p>
                                     </div>
                                 </div>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-3">
+                        <div class="col-sm-6 col-lg-4">
                             <a href="/my/pfs/withdrawals" class="card border-0 shadow-sm text-decoration-none h-100">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <i class="fa fa-2x fa-arrow-circle-o-down text-warning"/>
@@ -230,16 +247,15 @@
                                 </div>
                             </a>
                         </div>
-                        <div class="col-sm-6 col-lg-3">
+                        <div class="col-sm-6 col-lg-4">
                             <a href="/my/pfs/land-loans" class="card border-0 shadow-sm text-decoration-none h-100">
                                 <div class="card-body d-flex align-items-center gap-3">
                                     <i class="fa fa-2x fa-home text-success"/>
                                     <div>
                                         <strong>Land Loans</strong>
                                         <p class="text-muted mb-0 small">
-                                            <t t-out="len(active_land_loans)"/> active
-                                            · balance
-                                            <t t-esc="'%.3f' % member.land_loan_balance"/> JOD
+                                            <t t-out="len(active_land_loans)"/> active ·
+                                            balance <t t-esc="'%.3f' % member.land_loan_balance"/> JOD
                                         </p>
                                     </div>
                                 </div>
@@ -247,8 +263,8 @@
                         </div>
                     </div>
 
-                </div><!-- /container -->
-            </div><!-- /o_portal_wrap -->
+                </div>
+            </div>
         </t>
     </template>
 
@@ -266,10 +282,26 @@
 
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
-                    <h3 class="mb-3">Personal Loans</h3>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3 class="mb-0">Personal Loans</h3>
+                        <a t-if="can_apply" href="/my/pfs/loans/new"
+                           class="btn btn-primary">
+                            <i class="fa fa-plus me-1"/> Apply for Loan
+                        </a>
+                        <span t-else="" class="text-muted small">
+                            <i class="fa fa-info-circle me-1"/>
+                            Loan applications require at least the minimum contribution months.
+                        </span>
+                    </div>
 
                     <t t-if="not loans">
-                        <div class="alert alert-info">No loan records found.</div>
+                        <div class="alert alert-info">
+                            No loan records found.
+                            <t t-if="can_apply">
+                                <a href="/my/pfs/loans/new">Apply for your first loan.</a>
+                            </t>
+                        </div>
                     </t>
                     <t t-else="">
                         <div class="table-responsive">
@@ -290,10 +322,17 @@
                                         <tr>
                                             <td><strong t-out="loan.name"/></td>
                                             <td t-out="loan.date"/>
-                                            <td class="text-end"><t t-esc="'%.3f' % loan.loan_amount"/> JOD</td>
-                                            <td class="text-end"><t t-esc="'%.3f' % loan.monthly_installment"/> JOD</td>
                                             <td class="text-end">
-                                                <t t-if="loan.state in ('active',)">
+                                                <t t-esc="'%.3f' % loan.loan_amount"/> JOD
+                                            </td>
+                                            <td class="text-end">
+                                                <t t-if="loan.monthly_installment">
+                                                    <t t-esc="'%.3f' % loan.monthly_installment"/> JOD
+                                                </t>
+                                                <t t-else="">—</t>
+                                            </td>
+                                            <td class="text-end">
+                                                <t t-if="loan.state == 'active'">
                                                     <strong t-esc="'%.3f' % loan.remaining_balance"/> JOD
                                                 </t>
                                                 <t t-else="">—</t>
@@ -320,6 +359,219 @@
     </template>
 
     <!-- ══════════════════════════════════════════════════════════════════════
+         Loan application form  /my/pfs/loans/new
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="portal_loan_apply" name="PFS: Loan Application Form">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <nav aria-label="breadcrumb">
+                <t t-call="zain_pfs.portal_pfs_breadcrumb">
+                    <t t-set="crumbs" t-value="[
+                        ('Provident Fund', '/my/pfs'),
+                        ('Personal Loans', '/my/pfs/loans'),
+                        ('New Application', None)]"/>
+                </t>
+            </nav>
+
+            <div class="o_portal_wrap">
+                <div class="container py-3" style="max-width:760px">
+                    <h3 class="mb-4">Personal Loan Application</h3>
+
+                    <!-- Eligibility block -->
+                    <t t-if="not can_apply">
+                        <div class="alert alert-warning">
+                            <i class="fa fa-exclamation-triangle me-2"/>
+                            You need at least <strong t-out="min_months"/> posted contribution
+                            months to apply for a loan. You currently have
+                            <strong t-out="member.contribution_months"/> months.
+                        </div>
+                    </t>
+
+                    <!-- Member summary -->
+                    <div class="card border-0 shadow-sm mb-4">
+                        <div class="card-header bg-light fw-bold">Your Fund Summary</div>
+                        <div class="card-body">
+                            <div class="row text-center">
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Contribution Months</small>
+                                    <strong t-out="member.contribution_months"/>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Current Balance</small>
+                                    <strong><t t-esc="'%.3f' % member.current_balance"/> JOD</strong>
+                                </div>
+                                <div class="col-4">
+                                    <small class="text-muted d-block">Active Loan Balance</small>
+                                    <strong><t t-esc="'%.3f' % member.loan_balance"/> JOD</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- General error -->
+                    <t t-if="errors.get('_general')">
+                        <div class="alert alert-danger">
+                            <i class="fa fa-times-circle me-2"/>
+                            <t t-out="errors['_general']"/>
+                        </div>
+                    </t>
+
+                    <form t-if="can_apply" method="post" action="/my/pfs/loans/new"
+                          class="needs-validation" novalidate="novalidate">
+                        <input type="hidden" name="csrf_token"
+                               t-att-value="request.csrf_token()"/>
+
+                        <!-- Loan details -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-light fw-bold">Loan Details</div>
+                            <div class="card-body">
+
+                                <div class="row g-3">
+                                    <!-- Loan amount -->
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold" for="loan_amount">
+                                            Loan Amount (JOD) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" step="0.001" min="1"
+                                               class="form-control"
+                                               id="loan_amount" name="loan_amount"
+                                               t-att-value="form_data.get('loan_amount', '')"
+                                               required="required"/>
+                                        <t t-if="errors.get('loan_amount')">
+                                            <div class="text-danger small mt-1">
+                                                <t t-out="errors['loan_amount']"/>
+                                            </div>
+                                        </t>
+                                        <div class="form-text">
+                                            Maximum based on your balance:
+                                            <strong><t t-esc="'%.3f' % member.current_balance"/> JOD</strong>.
+                                            HR will verify your income capacity.
+                                        </div>
+                                    </div>
+
+                                    <!-- Installments -->
+                                    <div class="col-sm-6">
+                                        <label class="form-label fw-semibold" for="installments">
+                                            Number of Installments (months) <span class="text-danger">*</span>
+                                        </label>
+                                        <input type="number" step="1" min="1"
+                                               class="form-control"
+                                               id="installments" name="installments"
+                                               t-att-value="form_data.get('installments', '')"
+                                               required="required"/>
+                                        <t t-if="errors.get('installments')">
+                                            <div class="text-danger small mt-1">
+                                                <t t-out="errors['installments']"/>
+                                            </div>
+                                        </t>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Capacity information (optional – helps HR) -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-light fw-bold">
+                                Income &amp; Existing Commitments
+                                <small class="text-muted fw-normal ms-2">(optional – helps HR calculate your capacity)</small>
+                            </div>
+                            <div class="card-body">
+                                <div class="row g-3">
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="other_income">
+                                            Other Monthly Income (JOD)
+                                        </label>
+                                        <input type="number" step="0.001" min="0"
+                                               class="form-control"
+                                               id="other_income" name="other_income"
+                                               t-att-value="form_data.get('other_income', '')"/>
+                                        <div class="form-text">
+                                            Any income beyond your main salary.
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-6">
+                                        <label class="form-label" for="bank_installment">
+                                            External Bank Installment (JOD/month)
+                                        </label>
+                                        <input type="number" step="0.001" min="0"
+                                               class="form-control"
+                                               id="bank_installment" name="bank_installment"
+                                               t-att-value="form_data.get('bank_installment', '')"/>
+                                        <div class="form-text">
+                                            Monthly commitment to external banks.
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reschedule / Buyout -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-header bg-light fw-bold">Reschedule / Buyout</div>
+                            <div class="card-body">
+                                <div class="form-check mb-3">
+                                    <input class="form-check-input" type="checkbox"
+                                           id="is_rescheduled" name="is_rescheduled"
+                                           value="1"
+                                           t-att-checked="form_data.get('is_rescheduled') and 'checked' or None"
+                                           onchange="document.getElementById('reschedule_block').style.display=this.checked?'block':'none'"/>
+                                    <label class="form-check-label" for="is_rescheduled">
+                                        This is a reschedule / buyout of an existing loan
+                                    </label>
+                                </div>
+                                <div id="reschedule_block"
+                                     t-att-style="form_data.get('is_rescheduled') and 'display:block' or 'display:none'">
+                                    <label class="form-label" for="original_loan_id">
+                                        Original Loan to Buy Out
+                                    </label>
+                                    <select class="form-select" id="original_loan_id"
+                                            name="original_loan_id">
+                                        <option value="">— Select loan —</option>
+                                        <t t-foreach="active_loans" t-as="al">
+                                            <option t-att-value="al.id"
+                                                    t-att-selected="str(form_data.get('original_loan_id','')) == str(al.id) and 'selected' or None">
+                                                <t t-out="al.name"/> –
+                                                remaining <t t-esc="'%.3f' % al.remaining_balance"/> JOD
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Notes -->
+                        <div class="mb-4">
+                            <label class="form-label" for="notes">Notes</label>
+                            <textarea class="form-control" id="notes" name="notes"
+                                      rows="3" placeholder="Any additional information…">
+                                <t t-out="form_data.get('notes', '')"/>
+                            </textarea>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fa fa-paper-plane me-1"/> Save as Draft
+                            </button>
+                            <a href="/my/pfs/loans" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                        </div>
+
+                        <p class="text-muted small mt-3">
+                            <i class="fa fa-info-circle me-1"/>
+                            Your application will be saved as a <strong>Draft</strong>.
+                            Use the <strong>Submit to HR</strong> button on the next page
+                            when you are ready to send it for review.
+                        </p>
+                    </form>
+
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
          Personal Loan detail  /my/pfs/loans/<id>
     ══════════════════════════════════════════════════════════════════════════ -->
     <template id="portal_pfs_loan_detail" name="PFS: Loan Detail">
@@ -337,13 +589,59 @@
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
 
-                    <div class="d-flex align-items-center gap-3 mb-4">
+                    <!-- Title row + badge -->
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
                         <h3 class="mb-0" t-out="loan.name"/>
                         <t t-set="state_value" t-value="loan.state"/>
                         <t t-call="zain_pfs.portal_pfs_state_badge"/>
                     </div>
 
-                    <!-- ── Application details ───────────────────────────── -->
+                    <!-- "Just created" confirmation banner -->
+                    <div t-if="just_created" class="alert alert-success alert-dismissible fade show">
+                        <i class="fa fa-check-circle me-2"/>
+                        Your loan application has been saved as a draft.
+                        Review the details below and click <strong>Submit to HR</strong> when ready.
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"/>
+                    </div>
+
+                    <!-- ── Employee action bar (draft / submitted states) ─── -->
+                    <t t-if="loan.state in ('draft', 'submitted', 'preparation', 'approval_1', 'approval_2', 'pending_payment')">
+                        <div class="d-flex gap-2 mb-4">
+
+                            <!-- Submit to HR — only from draft -->
+                            <t t-if="loan.state == 'draft'">
+                                <form t-attf-action="/my/pfs/loans/#{loan.id}/submit"
+                                      method="post" class="d-inline">
+                                    <input type="hidden" name="csrf_token"
+                                           t-att-value="request.csrf_token()"/>
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fa fa-paper-plane me-1"/> Submit to HR
+                                    </button>
+                                </form>
+                            </t>
+
+                            <!-- Status info when already submitted -->
+                            <t t-if="loan.state != 'draft'">
+                                <span class="align-self-center text-muted small">
+                                    <i class="fa fa-clock-o me-1"/>
+                                    Your application is under review. Contact HR for updates.
+                                </span>
+                            </t>
+
+                            <!-- Cancel — available until pending_payment -->
+                            <form t-attf-action="/my/pfs/loans/#{loan.id}/cancel"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Cancel this loan application?')">
+                                <input type="hidden" name="csrf_token"
+                                       t-att-value="request.csrf_token()"/>
+                                <button type="submit" class="btn btn-outline-danger">
+                                    <i class="fa fa-times me-1"/> Cancel Application
+                                </button>
+                            </form>
+                        </div>
+                    </t>
+
+                    <!-- ── Application details ──────────────────────────── -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-light fw-bold">Application Details</div>
                         <div class="card-body">
@@ -370,28 +668,48 @@
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">Monthly Installment</small>
-                                    <span><t t-esc="'%.3f' % loan.monthly_installment"/> JOD</span>
+                                    <span>
+                                        <t t-if="loan.monthly_installment">
+                                            <t t-esc="'%.3f' % loan.monthly_installment"/> JOD
+                                        </t>
+                                        <t t-else="">— (pending HR review)</t>
+                                    </span>
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">First Installment</small>
-                                    <span><t t-esc="'%.3f' % loan.first_installment"/> JOD</span>
+                                    <span>
+                                        <t t-if="loan.first_installment">
+                                            <t t-esc="'%.3f' % loan.first_installment"/> JOD
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </span>
+                                </div>
+                                <div class="col-sm-6 col-md-3 mb-3" t-if="loan.is_rescheduled">
+                                    <small class="text-muted d-block">Type</small>
+                                    <span class="badge bg-info text-dark">Reschedule / Buyout</span>
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3" t-if="loan.disbursement_date">
                                     <small class="text-muted d-block">Disbursement Date</small>
                                     <span t-out="loan.disbursement_date"/>
                                 </div>
+                                <div class="col-sm-6 col-md-3 mb-3" t-if="loan.notes">
+                                    <small class="text-muted d-block">Notes</small>
+                                    <span t-out="loan.notes"/>
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- ── Balance (active/paid only) ────────────────────── -->
+                    <!-- ── Balance cards (active / paid) ────────────────── -->
                     <t t-if="loan.state in ('active', 'paid')">
                         <div class="row g-3 mb-4">
                             <div class="col-sm-4">
                                 <div class="card border-0 shadow-sm text-center">
                                     <div class="card-body">
                                         <small class="text-muted d-block">Paid</small>
-                                        <h5 class="text-success"><t t-esc="'%.3f' % loan.paid_amount"/> JOD</h5>
+                                        <h5 class="text-success">
+                                            <t t-esc="'%.3f' % loan.paid_amount"/> JOD
+                                        </h5>
                                     </div>
                                 </div>
                             </div>
@@ -399,7 +717,9 @@
                                 <div class="card border-0 shadow-sm text-center">
                                     <div class="card-body">
                                         <small class="text-muted d-block">Remaining</small>
-                                        <h5 class="text-primary"><t t-esc="'%.3f' % loan.remaining_balance"/> JOD</h5>
+                                        <h5 class="text-primary">
+                                            <t t-esc="'%.3f' % loan.remaining_balance"/> JOD
+                                        </h5>
                                     </div>
                                 </div>
                             </div>
@@ -413,7 +733,7 @@
                             </div>
                         </div>
 
-                        <!-- ── Repayment schedule ────────────────────────── -->
+                        <!-- Repayment schedule -->
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-light fw-bold">Repayment Schedule</div>
                             <div class="table-responsive">
@@ -429,14 +749,22 @@
                                     </thead>
                                     <tbody>
                                         <t t-foreach="loan.line_ids" t-as="line">
-                                            <tr t-attf-class="#{line.paid and 'table-success' or (not line.paid and line.date and line.date &lt; context_today() and 'table-danger') or ''}">
+                                            <tr t-attf-class="#{
+                                                'table-success' if line.paid else
+                                                ('table-danger' if (line.date and line.date &lt; context_today()) else '')
+                                            }">
                                                 <td t-out="line.sequence"/>
                                                 <td t-out="line.date"/>
-                                                <td class="text-end"><t t-esc="'%.3f' % line.amount"/></td>
+                                                <td class="text-end">
+                                                    <t t-esc="'%.3f' % line.amount"/>
+                                                </td>
                                                 <td>
-                                                    <span t-if="line.paid" class="badge bg-success">Paid</span>
-                                                    <span t-elif="line.date and line.date &lt; context_today()" class="badge bg-danger">Overdue</span>
-                                                    <span t-else="" class="badge bg-secondary">Pending</span>
+                                                    <span t-if="line.paid"
+                                                          class="badge bg-success">Paid</span>
+                                                    <span t-elif="line.date and line.date &lt; context_today()"
+                                                          class="badge bg-danger">Overdue</span>
+                                                    <span t-else=""
+                                                          class="badge bg-secondary">Pending</span>
                                                 </td>
                                                 <td t-out="line.payment_date or '—'"/>
                                             </tr>
@@ -466,11 +794,9 @@
                     <t t-set="crumbs" t-value="[('Provident Fund','/my/pfs'), ('Withdrawals', None)]"/>
                 </t>
             </nav>
-
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
                     <h3 class="mb-3">Withdrawals</h3>
-
                     <t t-if="not withdrawals">
                         <div class="alert alert-info">No withdrawal records found.</div>
                     </t>
@@ -494,13 +820,17 @@
                                             <td><strong t-out="w.name"/></td>
                                             <td t-out="w.date"/>
                                             <td>
-                                                <span t-if="w.withdrawal_type == '50'">50% Withdrawal</span>
-                                                <span t-else="">75% Withdrawal</span>
+                                                <t t-if="w.withdrawal_type == '50'">50% Withdrawal</t>
+                                                <t t-else="">75% Withdrawal</t>
                                             </td>
-                                            <td class="text-end"><t t-esc="'%.3f' % w.requested_amount"/> JOD</td>
+                                            <td class="text-end">
+                                                <t t-esc="'%.3f' % w.requested_amount"/> JOD
+                                            </td>
                                             <td class="text-end">
                                                 <t t-if="w.state == 'approved'">
-                                                    <strong><t t-esc="'%.3f' % w.approved_amount"/> JOD</strong>
+                                                    <strong>
+                                                        <t t-esc="'%.3f' % w.approved_amount"/> JOD
+                                                    </strong>
                                                 </t>
                                                 <t t-else="">—</t>
                                             </td>
@@ -539,16 +869,13 @@
                         (withdrawal.name, None)]"/>
                 </t>
             </nav>
-
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
-
                     <div class="d-flex align-items-center gap-3 mb-4">
                         <h3 class="mb-0" t-out="withdrawal.name"/>
                         <t t-set="state_value" t-value="withdrawal.state"/>
                         <t t-call="zain_pfs.portal_pfs_state_badge"/>
                     </div>
-
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-light fw-bold">Request Details</div>
                         <div class="card-body">
@@ -559,24 +886,30 @@
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">Type</small>
-                                    <span t-if="withdrawal.withdrawal_type == '50'">50% Withdrawal</span>
-                                    <span t-else="">75% Withdrawal</span>
+                                    <t t-if="withdrawal.withdrawal_type == '50'">50% Withdrawal</t>
+                                    <t t-else="">75% Withdrawal</t>
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">Requested Amount</small>
-                                    <strong><t t-esc="'%.3f' % withdrawal.requested_amount"/> JOD</strong>
+                                    <strong>
+                                        <t t-esc="'%.3f' % withdrawal.requested_amount"/> JOD
+                                    </strong>
                                 </div>
-                                <div class="col-sm-6 col-md-3 mb-3" t-if="withdrawal.is_loan_settlement">
+                                <div class="col-sm-6 col-md-3 mb-3"
+                                     t-if="withdrawal.is_loan_settlement">
                                     <small class="text-muted d-block">Loan Settlement</small>
-                                    <span class="badge bg-info text-dark">Includes loan settlement</span>
+                                    <span class="badge bg-info text-dark">
+                                        Includes loan settlement
+                                    </span>
                                 </div>
                             </div>
                         </div>
                     </div>
-
                     <t t-if="withdrawal.state == 'approved'">
                         <div class="card border-success border-2 shadow-sm mb-4">
-                            <div class="card-header bg-success text-white fw-bold">Approval Details</div>
+                            <div class="card-header bg-success text-white fw-bold">
+                                Approval Details
+                            </div>
                             <div class="card-body">
                                 <div class="row">
                                     <div class="col-sm-6 col-md-3 mb-3">
@@ -585,17 +918,27 @@
                                     </div>
                                     <div class="col-sm-6 col-md-3 mb-3">
                                         <small class="text-muted d-block">Approved Amount</small>
-                                        <strong><t t-esc="'%.3f' % withdrawal.approved_amount"/> JOD</strong>
+                                        <strong>
+                                            <t t-esc="'%.3f' % withdrawal.approved_amount"/> JOD
+                                        </strong>
                                     </div>
-                                    <div class="col-sm-6 col-md-3 mb-3" t-if="withdrawal.is_loan_settlement">
-                                        <small class="text-muted d-block">Loan Settlement Amount</small>
-                                        <span><t t-esc="'%.3f' % withdrawal.loan_settlement_amount"/> JOD</span>
+                                    <div class="col-sm-6 col-md-3 mb-3"
+                                         t-if="withdrawal.is_loan_settlement">
+                                        <small class="text-muted d-block">
+                                            Loan Settlement Amount
+                                        </small>
+                                        <span>
+                                            <t t-esc="'%.3f' % withdrawal.loan_settlement_amount"/> JOD
+                                        </span>
                                     </div>
                                     <div class="col-sm-6 col-md-3 mb-3">
                                         <small class="text-muted d-block">Cash to You</small>
-                                        <strong class="text-success"><t t-esc="'%.3f' % withdrawal.cash_amount"/> JOD</strong>
+                                        <strong class="text-success">
+                                            <t t-esc="'%.3f' % withdrawal.cash_amount"/> JOD
+                                        </strong>
                                     </div>
-                                    <div class="col-sm-6 col-md-3 mb-3" t-if="withdrawal.lock_expiry_date">
+                                    <div class="col-sm-6 col-md-3 mb-3"
+                                         t-if="withdrawal.lock_expiry_date">
                                         <small class="text-muted d-block">Lock Expires On</small>
                                         <span t-out="withdrawal.lock_expiry_date"/>
                                     </div>
@@ -603,7 +946,6 @@
                             </div>
                         </div>
                     </t>
-
                     <a href="/my/pfs/withdrawals" class="btn btn-outline-secondary">
                         <i class="fa fa-arrow-left me-1"/> Back to Withdrawals
                     </a>
@@ -623,11 +965,9 @@
                     <t t-set="crumbs" t-value="[('Provident Fund','/my/pfs'), ('Land Loans', None)]"/>
                 </t>
             </nav>
-
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
                     <h3 class="mb-3">Land Loans</h3>
-
                     <t t-if="not land_loans">
                         <div class="alert alert-info">No land loan records found.</div>
                     </t>
@@ -652,11 +992,17 @@
                                             <td><strong t-out="ll.name"/></td>
                                             <td t-out="ll.date"/>
                                             <td t-out="ll.land_id.name"/>
-                                            <td class="text-end"><t t-esc="'%.3f' % ll.land_price"/> JOD</td>
-                                            <td class="text-end"><t t-esc="'%.3f' % ll.financed_amount"/> JOD</td>
                                             <td class="text-end">
-                                                <t t-if="ll.state in ('active',)">
-                                                    <strong><t t-esc="'%.3f' % ll.remaining_balance"/> JOD</strong>
+                                                <t t-esc="'%.3f' % ll.land_price"/> JOD
+                                            </td>
+                                            <td class="text-end">
+                                                <t t-esc="'%.3f' % ll.financed_amount"/> JOD
+                                            </td>
+                                            <td class="text-end">
+                                                <t t-if="ll.state == 'active'">
+                                                    <strong>
+                                                        <t t-esc="'%.3f' % ll.remaining_balance"/> JOD
+                                                    </strong>
                                                 </t>
                                                 <t t-else="">—</t>
                                             </td>
@@ -695,17 +1041,15 @@
                         (loan.name, None)]"/>
                 </t>
             </nav>
-
             <div class="o_portal_wrap">
                 <div class="container-fluid py-3">
-
                     <div class="d-flex align-items-center gap-3 mb-4">
                         <h3 class="mb-0" t-out="loan.name"/>
                         <t t-set="state_value" t-value="loan.state"/>
                         <t t-call="zain_pfs.portal_pfs_state_badge"/>
                     </div>
 
-                    <!-- ── Plot + Financing ──────────────────────────────── -->
+                    <!-- Plot + Financing -->
                     <div class="card border-0 shadow-sm mb-4">
                         <div class="card-header bg-light fw-bold">Plot &amp; Financing</div>
                         <div class="card-body">
@@ -724,7 +1068,9 @@
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">Area</small>
-                                    <span><t t-esc="'%.1f' % (loan.land_area or 0)"/> sq m</span>
+                                    <span>
+                                        <t t-esc="'%.1f' % (loan.land_area or 0)"/> sq m
+                                    </span>
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">Land Price</small>
@@ -744,9 +1090,15 @@
                                 </div>
                                 <div class="col-sm-6 col-md-3 mb-3">
                                     <small class="text-muted d-block">Monthly Installment</small>
-                                    <span><t t-esc="'%.3f' % loan.installment_amount"/> JOD</span>
+                                    <span>
+                                        <t t-if="loan.installment_amount">
+                                            <t t-esc="'%.3f' % loan.installment_amount"/> JOD
+                                        </t>
+                                        <t t-else="">—</t>
+                                    </span>
                                 </div>
-                                <div class="col-sm-6 col-md-3 mb-3" t-if="loan.disbursement_date">
+                                <div class="col-sm-6 col-md-3 mb-3"
+                                     t-if="loan.disbursement_date">
                                     <small class="text-muted d-block">Disbursement Date</small>
                                     <span t-out="loan.disbursement_date"/>
                                 </div>
@@ -754,14 +1106,16 @@
                         </div>
                     </div>
 
-                    <!-- ── Balance (active/paid only) ────────────────────── -->
+                    <!-- Balance (active/paid) -->
                     <t t-if="loan.state in ('active', 'paid')">
                         <div class="row g-3 mb-4">
                             <div class="col-sm-4">
                                 <div class="card border-0 shadow-sm text-center">
                                     <div class="card-body">
                                         <small class="text-muted d-block">Paid</small>
-                                        <h5 class="text-success"><t t-esc="'%.3f' % loan.paid_amount"/> JOD</h5>
+                                        <h5 class="text-success">
+                                            <t t-esc="'%.3f' % loan.paid_amount"/> JOD
+                                        </h5>
                                     </div>
                                 </div>
                             </div>
@@ -769,7 +1123,9 @@
                                 <div class="card border-0 shadow-sm text-center">
                                     <div class="card-body">
                                         <small class="text-muted d-block">Remaining</small>
-                                        <h5 class="text-primary"><t t-esc="'%.3f' % loan.remaining_balance"/> JOD</h5>
+                                        <h5 class="text-primary">
+                                            <t t-esc="'%.3f' % loan.remaining_balance"/> JOD
+                                        </h5>
                                     </div>
                                 </div>
                             </div>
@@ -777,13 +1133,15 @@
                                 <div class="card border-danger border-2 shadow-sm text-center">
                                     <div class="card-body">
                                         <small class="text-muted d-block">Overdue</small>
-                                        <h5 class="text-danger"><t t-out="loan.overdue_count"/></h5>
+                                        <h5 class="text-danger">
+                                            <t t-out="loan.overdue_count"/>
+                                        </h5>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- ── Repayment schedule ────────────────────────── -->
+                        <!-- Repayment schedule -->
                         <div class="card border-0 shadow-sm mb-4">
                             <div class="card-header bg-light fw-bold">Repayment Schedule</div>
                             <div class="table-responsive">
@@ -799,14 +1157,22 @@
                                     </thead>
                                     <tbody>
                                         <t t-foreach="loan.line_ids" t-as="line">
-                                            <tr t-attf-class="#{line.paid and 'table-success' or (not line.paid and line.date and line.date &lt; context_today() and 'table-danger') or ''}">
+                                            <tr t-attf-class="#{
+                                                'table-success' if line.paid else
+                                                ('table-danger' if (line.date and line.date &lt; context_today()) else '')
+                                            }">
                                                 <td t-out="line.sequence"/>
                                                 <td t-out="line.date"/>
-                                                <td class="text-end"><t t-esc="'%.3f' % line.amount"/></td>
+                                                <td class="text-end">
+                                                    <t t-esc="'%.3f' % line.amount"/>
+                                                </td>
                                                 <td>
-                                                    <span t-if="line.paid" class="badge bg-success">Paid</span>
-                                                    <span t-elif="line.date and line.date &lt; context_today()" class="badge bg-danger">Overdue</span>
-                                                    <span t-else="" class="badge bg-secondary">Pending</span>
+                                                    <span t-if="line.paid"
+                                                          class="badge bg-success">Paid</span>
+                                                    <span t-elif="line.date and line.date &lt; context_today()"
+                                                          class="badge bg-danger">Overdue</span>
+                                                    <span t-else=""
+                                                          class="badge bg-secondary">Pending</span>
                                                 </td>
                                                 <td t-out="line.payment_date or '—'"/>
                                             </tr>
