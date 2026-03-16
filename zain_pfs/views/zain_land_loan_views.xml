@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_land_loan_form" model="ir.ui.view">
+        <field name="name">zain.land.loan.form</field>
+        <field name="model">zain.land.loan</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" string="Submit to HR" type="object"
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_to_preparation" string="Move to Preparation" type="object"
+                            invisible="state != 'submitted'"
+                            groups="zain_pfs.group_pfs_hr"/>
+                    <button name="action_approval_1" string="Send for Approval #1" type="object"
+                            invisible="state != 'preparation'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_approval_2" string="Send for Approval #2" type="object"
+                            invisible="state != 'approval_1'"
+                            groups="zain_pfs.group_pfs_fund_committee"/>
+                    <button name="action_pending_payment" string="Approve – Pending Payment" type="object"
+                            invisible="state != 'approval_2'"
+                            groups="zain_pfs.group_pfs_fund_committee"/>
+                    <button name="action_disburse" string="Disburse &amp; Reserve Plot" type="object"
+                            invisible="state != 'pending_payment'"
+                            groups="zain_pfs.group_pfs_fund_admin"
+                            class="btn-primary"/>
+                    <button name="action_mark_paid" string="Mark as Paid" type="object"
+                            invisible="state != 'active'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('active','paid','cancelled')"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,preparation,approval_1,approval_2,pending_payment,active,paid"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="member_id"/>
+                            <field name="date"/>
+                        </group>
+                        <group>
+                            <field name="land_id"/>
+                            <field name="land_price" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Financing">
+                        <field name="down_payment"/>
+                        <field name="installments"/>
+                        <field name="installment_amount" readonly="1"/>
+                        <field name="remaining_balance" readonly="1"/>
+                    </group>
+                    <group string="Payment Details"
+                           invisible="state not in ('pending_payment','active','paid')">
+                        <field name="payment_method"/>
+                        <field name="cheque_number" invisible="payment_method != 'cheque'"/>
+                        <field name="cheque_date" invisible="payment_method != 'cheque'"/>
+                        <field name="cheque_amount" invisible="payment_method != 'cheque'"/>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                    <notebook>
+                        <page string="Repayment Schedule" invisible="not line_ids">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="sequence" optional="hide"/>
+                                    <field name="date"/>
+                                    <field name="amount"/>
+                                    <field name="paid"/>
+                                    <field name="payment_date"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_land_loan_list" model="ir.ui.view">
+        <field name="name">zain.land.loan.list</field>
+        <field name="model">zain.land.loan</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="land_id"/>
+                <field name="land_price"/>
+                <field name="down_payment"/>
+                <field name="installments"/>
+                <field name="remaining_balance"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_zain_land_loan" model="ir.actions.act_window">
+        <field name="name">Land Loans</field>
+        <field name="res_model">zain.land.loan</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

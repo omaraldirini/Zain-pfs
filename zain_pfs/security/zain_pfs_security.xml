@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- ── Category ──────────────────────────────────────────────────── -->
+        <record id="module_category_zain_pfs" model="ir.module.category">
+            <field name="name">Zain Provident Fund</field>
+            <field name="sequence">100</field>
+        </record>
+
+        <!-- ── Groups ────────────────────────────────────────────────────── -->
+
+        <!-- Employee (Portal) – can view own profile, submit requests -->
+        <record id="group_pfs_employee" model="res.groups">
+            <field name="name">Employee</field>
+            <field name="category_id" ref="module_category_zain_pfs"/>
+        </record>
+
+        <!-- HR Department – verifies income and payroll data -->
+        <record id="group_pfs_hr" model="res.groups">
+            <field name="name">HR Department</field>
+            <field name="category_id" ref="module_category_zain_pfs"/>
+            <field name="implied_ids" eval="[(4, ref('group_pfs_employee'))]"/>
+        </record>
+
+        <!-- Fund Administrator – day-to-day operations -->
+        <record id="group_pfs_fund_admin" model="res.groups">
+            <field name="name">Fund Administrator</field>
+            <field name="category_id" ref="module_category_zain_pfs"/>
+            <field name="implied_ids" eval="[(4, ref('group_pfs_hr'))]"/>
+        </record>
+
+        <!-- Fund Committee – final approvals -->
+        <record id="group_pfs_fund_committee" model="res.groups">
+            <field name="name">Fund Committee</field>
+            <field name="category_id" ref="module_category_zain_pfs"/>
+            <field name="implied_ids" eval="[(4, ref('group_pfs_fund_admin'))]"/>
+        </record>
+
+        <!-- System Administrator – full access including configuration -->
+        <record id="group_pfs_system_admin" model="res.groups">
+            <field name="name">System Administrator</field>
+            <field name="category_id" ref="module_category_zain_pfs"/>
+            <field name="implied_ids" eval="[(4, ref('group_pfs_fund_committee'))]"/>
+        </record>
+
+    </data>
+</odoo>

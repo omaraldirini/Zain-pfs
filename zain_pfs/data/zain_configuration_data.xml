@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+
+        <!-- Sequences -->
+        <record id="seq_zain_loan" model="ir.sequence">
+            <field name="name">PFS Loan</field>
+            <field name="code">zain.loan</field>
+            <field name="prefix">LOAN/%(year)s/</field>
+            <field name="padding">5</field>
+        </record>
+
+        <record id="seq_zain_land_loan" model="ir.sequence">
+            <field name="name">PFS Land Loan</field>
+            <field name="code">zain.land.loan</field>
+            <field name="prefix">LLOAN/%(year)s/</field>
+            <field name="padding">5</field>
+        </record>
+
+        <record id="seq_zain_withdrawal" model="ir.sequence">
+            <field name="name">PFS Withdrawal</field>
+            <field name="code">zain.withdrawal</field>
+            <field name="prefix">WITH/%(year)s/</field>
+            <field name="padding">5</field>
+        </record>
+
+        <record id="seq_zain_resignation" model="ir.sequence">
+            <field name="name">PFS Resignation</field>
+            <field name="code">zain.resignation</field>
+            <field name="prefix">RES/%(year)s/</field>
+            <field name="padding">5</field>
+        </record>
+
+        <record id="seq_zain_profit_distribution" model="ir.sequence">
+            <field name="name">PFS Profit Distribution</field>
+            <field name="code">zain.profit.distribution</field>
+            <field name="prefix">PROF/%(year)s/</field>
+            <field name="padding">5</field>
+        </record>
+
+        <!-- Default configuration record -->
+        <record id="zain_configuration_default" model="zain.configuration">
+            <field name="min_contribution_months">36</field>
+            <field name="withdrawal_50_min_months">60</field>
+            <field name="withdrawal_75_min_months">240</field>
+            <field name="loan_installment_cap">0.5</field>
+            <field name="min_remaining_salary">240.0</field>
+            <field name="loan_admin_fees">5.0</field>
+            <field name="loan_admin_fees_threshold">504.0</field>
+            <field name="reschedule_fees">25.0</field>
+            <field name="vesting_tier_1_months">36</field>
+            <field name="vesting_tier_1_percent">0.6</field>
+            <field name="vesting_tier_2_months">48</field>
+            <field name="vesting_tier_2_percent">0.8</field>
+            <field name="vesting_tier_3_months">60</field>
+            <field name="vesting_tier_3_percent">1.0</field>
+            <field name="withdrawal_lock_loan_years">3</field>
+            <field name="withdrawal_lock_cash_years">5</field>
+        </record>
+
+    </data>
+</odoo>

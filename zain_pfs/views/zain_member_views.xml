@@ -1,0 +1,142 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Form view ─────────────────────────────────────────────────────── -->
+    <record id="view_zain_member_form" model="ir.ui.view">
+        <field name="name">zain.member.form</field>
+        <field name="model">zain.member</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="active,resigned,terminated"/>
+                </header>
+                <sheet>
+                    <group string="Employee Information">
+                        <group>
+                            <field name="employee_id"/>
+                            <field name="employee_number"/>
+                            <field name="department_id"/>
+                            <field name="job_id"/>
+                        </group>
+                        <group>
+                            <field name="join_date"/>
+                            <field name="fund_join_date"/>
+                            <field name="contribution_months"/>
+                        </group>
+                    </group>
+
+                    <group string="Balance Inquiry">
+                        <group>
+                            <field name="as_of_date"/>
+                        </group>
+                    </group>
+
+                    <group string="Balance Summary" col="4">
+                        <field name="employee_contribution" readonly="1"/>
+                        <field name="company_contribution" readonly="1"/>
+                        <field name="total_profits" readonly="1"/>
+                        <field name="total_withdrawn" readonly="1"/>
+                        <field name="current_balance" readonly="1"/>
+                    </group>
+
+                    <group string="Loan Summary">
+                        <field name="active_loan_count" readonly="1"/>
+                        <field name="loan_balance" readonly="1"/>
+                        <field name="land_loan_balance" readonly="1"/>
+                    </group>
+
+                    <group string="Eligibility">
+                        <field name="eligibility_50" readonly="1" string="Eligibility (50%)"/>
+                        <field name="eligibility_75" readonly="1" string="Eligibility (75%)"/>
+                    </group>
+
+                    <notebook>
+                        <page string="Loans" name="loans">
+                            <field name="loan_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="loan_amount"/>
+                                    <field name="installments"/>
+                                    <field name="remaining_balance"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Withdrawals" name="withdrawals">
+                            <field name="withdrawal_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="date"/>
+                                    <field name="withdrawal_type"/>
+                                    <field name="requested_amount"/>
+                                    <field name="approved_amount"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Land Loans" name="land_loans">
+                            <field name="land_loan_ids" readonly="1">
+                                <list>
+                                    <field name="name"/>
+                                    <field name="land_id"/>
+                                    <field name="land_price"/>
+                                    <field name="remaining_balance"/>
+                                    <field name="state"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- ── List view ─────────────────────────────────────────────────────── -->
+    <record id="view_zain_member_list" model="ir.ui.view">
+        <field name="name">zain.member.list</field>
+        <field name="model">zain.member</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id"/>
+                <field name="employee_number"/>
+                <field name="department_id"/>
+                <field name="fund_join_date"/>
+                <field name="contribution_months"/>
+                <field name="current_balance"/>
+                <field name="loan_balance"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- ── Search view ───────────────────────────────────────────────────── -->
+    <record id="view_zain_member_search" model="ir.ui.view">
+        <field name="name">zain.member.search</field>
+        <field name="model">zain.member</field>
+        <field name="arch" type="xml">
+            <search>
+                <field name="employee_id"/>
+                <field name="employee_number"/>
+                <field name="department_id"/>
+                <filter name="active" string="Active" domain="[('state','=','active')]"/>
+                <filter name="resigned" string="Resigned" domain="[('state','=','resigned')]"/>
+                <group expand="1" string="Group By">
+                    <filter name="group_department" string="Department"
+                            context="{'group_by': 'department_id'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <!-- ── Action ────────────────────────────────────────────────────────── -->
+    <record id="action_zain_member" model="ir.actions.act_window">
+        <field name="name">Members</field>
+        <field name="res_model">zain.member</field>
+        <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_zain_member_search"/>
+    </record>
+
+</odoo>

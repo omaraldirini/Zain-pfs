@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_configuration_form" model="ir.ui.view">
+        <field name="name">zain.configuration.form</field>
+        <field name="model">zain.configuration</field>
+        <field name="arch" type="xml">
+            <form string="PFS Configuration">
+                <sheet>
+                    <group string="Contribution Eligibility">
+                        <field name="min_contribution_months"/>
+                        <field name="withdrawal_50_min_months"/>
+                        <field name="withdrawal_75_min_months"/>
+                    </group>
+                    <group string="Loan Rules">
+                        <field name="loan_installment_cap" widget="percentage"/>
+                        <field name="min_remaining_salary"/>
+                        <field name="loan_admin_fees"/>
+                        <field name="loan_admin_fees_threshold"/>
+                        <field name="reschedule_fees"/>
+                    </group>
+                    <group string="Vesting Schedule">
+                        <group string="Tier 1">
+                            <field name="vesting_tier_1_months"/>
+                            <field name="vesting_tier_1_percent" widget="percentage"/>
+                        </group>
+                        <group string="Tier 2">
+                            <field name="vesting_tier_2_months"/>
+                            <field name="vesting_tier_2_percent" widget="percentage"/>
+                        </group>
+                        <group string="Tier 3 (Full Vesting)">
+                            <field name="vesting_tier_3_months"/>
+                            <field name="vesting_tier_3_percent" widget="percentage"/>
+                        </group>
+                    </group>
+                    <group string="Withdrawal Lock Periods">
+                        <field name="withdrawal_lock_loan_years"/>
+                        <field name="withdrawal_lock_cash_years"/>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_zain_configuration" model="ir.actions.act_window">
+        <field name="name">PFS Configuration</field>
+        <field name="res_model">zain.configuration</field>
+        <field name="view_mode">form</field>
+        <field name="res_id">1</field>
+    </record>
+
+</odoo>

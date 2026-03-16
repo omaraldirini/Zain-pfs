@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_withdrawal_form" model="ir.ui.view">
+        <field name="name">zain.withdrawal.form</field>
+        <field name="model">zain.withdrawal</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" string="Submit to HR" type="object"
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_to_approval_1" string="HR Approved – Send to Committee" type="object"
+                            invisible="state != 'hr_review'"
+                            groups="zain_pfs.group_pfs_hr"/>
+                    <button name="action_to_approval_2" string="Approval #1 Done" type="object"
+                            invisible="state != 'approval_1'"
+                            groups="zain_pfs.group_pfs_fund_committee"/>
+                    <button name="action_approve" string="Final Approval" type="object"
+                            invisible="state != 'approval_2'"
+                            groups="zain_pfs.group_pfs_fund_committee"
+                            class="btn-primary"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('approved','cancelled')"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancelled'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,hr_review,approval_1,approval_2,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="member_id"/>
+                            <field name="date"/>
+                            <field name="withdrawal_type"/>
+                        </group>
+                        <group>
+                            <field name="eligible_amount" readonly="1"/>
+                            <field name="requested_amount"/>
+                            <field name="is_loan_settlement"/>
+                            <field name="net_amount" readonly="1"/>
+                        </group>
+                    </group>
+                    <group string="Approved" invisible="state != 'approved'">
+                        <field name="approved_amount" readonly="1"/>
+                        <field name="approved_date" readonly="1"/>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_withdrawal_list" model="ir.ui.view">
+        <field name="name">zain.withdrawal.list</field>
+        <field name="model">zain.withdrawal</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="date"/>
+                <field name="withdrawal_type"/>
+                <field name="requested_amount"/>
+                <field name="eligible_amount"/>
+                <field name="approved_amount"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_zain_withdrawal" model="ir.actions.act_window">
+        <field name="name">Withdrawals</field>
+        <field name="res_model">zain.withdrawal</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

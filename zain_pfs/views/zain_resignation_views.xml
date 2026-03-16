@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_resignation_form" model="ir.ui.view">
+        <field name="name">zain.resignation.form</field>
+        <field name="model">zain.resignation</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_submit" string="Submit" type="object"
+                            invisible="state != 'draft'" class="btn-primary"/>
+                    <button name="action_approve" string="Approve Settlement" type="object"
+                            invisible="state != 'submitted'"
+                            groups="zain_pfs.group_pfs_fund_committee"
+                            class="btn-primary"/>
+                    <button name="action_cancel" string="Cancel" type="object"
+                            invisible="state in ('approved','cancelled')"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state != 'cancelled'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,submitted,approved"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="member_id"/>
+                            <field name="resignation_date"/>
+                            <field name="reason"/>
+                            <field name="is_fraudulent" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="contribution_months_at_resignation" readonly="1"/>
+                            <field name="vesting_percent" readonly="1" widget="percentage"/>
+                        </group>
+                    </group>
+                    <group string="Settlement Breakdown" invisible="state == 'draft'">
+                        <field name="employee_contributions" readonly="1"/>
+                        <field name="company_contributions_entitled" readonly="1"/>
+                        <field name="profits_entitled" readonly="1"/>
+                        <field name="withdrawn_amounts" readonly="1"/>
+                        <field name="outstanding_loans" readonly="1"/>
+                        <field name="final_settlement" readonly="1"/>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_resignation_list" model="ir.ui.view">
+        <field name="name">zain.resignation.list</field>
+        <field name="model">zain.resignation</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="member_id"/>
+                <field name="resignation_date"/>
+                <field name="reason"/>
+                <field name="contribution_months_at_resignation"/>
+                <field name="vesting_percent" widget="percentage"/>
+                <field name="final_settlement"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_zain_resignation" model="ir.actions.act_window">
+        <field name="name">Resignations &amp; Settlements</field>
+        <field name="res_model">zain.resignation</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

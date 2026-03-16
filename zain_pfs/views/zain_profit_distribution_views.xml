@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_profit_distribution_form" model="ir.ui.view">
+        <field name="name">zain.profit.distribution.form</field>
+        <field name="model">zain.profit.distribution</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_generate_lines" string="Generate Member Lines" type="object"
+                            invisible="state != 'draft'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_submit_for_approval" string="Submit for Committee Approval" type="object"
+                            invisible="state != 'draft'"
+                            groups="zain_pfs.group_pfs_fund_admin"
+                            class="btn-primary"/>
+                    <button name="action_approve" string="Approve Distribution" type="object"
+                            invisible="state != 'pending_approval'"
+                            groups="zain_pfs.group_pfs_fund_committee"
+                            class="btn-primary"/>
+                    <button name="action_post" string="Post to Accounts" type="object"
+                            invisible="state != 'approved'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_reset_draft" string="Reset to Draft" type="object"
+                            invisible="state not in ('pending_approval',)"
+                            groups="zain_pfs.group_pfs_system_admin"/>
+                    <field name="state" widget="statusbar"
+                           statusbar_visible="draft,pending_approval,approved,posted"/>
+                </header>
+                <sheet>
+                    <div class="oe_title">
+                        <h1><field name="name" readonly="1"/></h1>
+                    </div>
+                    <group>
+                        <group>
+                            <field name="fiscal_year"/>
+                            <field name="date"/>
+                            <field name="total_profit"/>
+                        </group>
+                        <group>
+                            <field name="total_avg_balance" readonly="1"/>
+                            <field name="approved_by" readonly="1"
+                                   invisible="not approved_by"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                    <notebook>
+                        <page string="Member Distribution Lines">
+                            <field name="line_ids">
+                                <list editable="bottom">
+                                    <field name="member_id"/>
+                                    <field name="avg_monthly_balance"/>
+                                    <field name="share_percent" readonly="1"/>
+                                    <field name="profit_amount" readonly="1"/>
+                                    <field name="posted" readonly="1"/>
+                                </list>
+                            </field>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_profit_distribution_list" model="ir.ui.view">
+        <field name="name">zain.profit.distribution.list</field>
+        <field name="model">zain.profit.distribution</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="fiscal_year"/>
+                <field name="date"/>
+                <field name="total_profit"/>
+                <field name="total_avg_balance"/>
+                <field name="state"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_zain_profit_distribution" model="ir.actions.act_window">
+        <field name="name">Profit Distribution</field>
+        <field name="res_model">zain.profit.distribution</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="view_zain_land_form" model="ir.ui.view">
+        <field name="name">zain.land.form</field>
+        <field name="model">zain.land</field>
+        <field name="arch" type="xml">
+            <form>
+                <header>
+                    <button name="action_mark_available" string="Set Available" type="object"
+                            invisible="status == 'available'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <button name="action_mark_sold" string="Mark as Sold" type="object"
+                            invisible="status != 'reserved'"
+                            groups="zain_pfs.group_pfs_fund_admin"/>
+                    <field name="status" widget="statusbar"
+                           statusbar_visible="available,reserved,sold"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group string="Plot Details">
+                            <field name="name"/>
+                            <field name="area"/>
+                            <field name="basin"/>
+                            <field name="plot_number"/>
+                            <field name="location"/>
+                        </group>
+                        <group string="Pricing &amp; Status">
+                            <field name="price"/>
+                            <field name="status"/>
+                            <field name="reserved_member_id" readonly="1"
+                                   invisible="status == 'available'"/>
+                        </group>
+                    </group>
+                    <field name="notes" placeholder="Notes..."/>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_zain_land_list" model="ir.ui.view">
+        <field name="name">zain.land.list</field>
+        <field name="model">zain.land</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="name"/>
+                <field name="area"/>
+                <field name="basin"/>
+                <field name="plot_number"/>
+                <field name="location"/>
+                <field name="price"/>
+                <field name="status"/>
+                <field name="reserved_member_id"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_zain_land" model="ir.actions.act_window">
+        <field name="name">Land Plots</field>
+        <field name="res_model">zain.land</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+</odoo>

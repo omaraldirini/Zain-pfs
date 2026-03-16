@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- ── Root menu ─────────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_root"
+              name="Provident Fund"
+              sequence="100"
+              groups="zain_pfs.group_pfs_employee"
+              web_icon="zain_pfs,static/description/icon.png"/>
+
+    <!-- ── Members ───────────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_members"
+              name="Members"
+              parent="menu_zain_pfs_root"
+              sequence="10"
+              groups="zain_pfs.group_pfs_fund_admin"/>
+    <menuitem id="menu_zain_member"
+              name="Members"
+              parent="menu_zain_pfs_members"
+              action="action_zain_member"
+              sequence="10"/>
+
+    <!-- ── Loans ─────────────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_loans"
+              name="Loans"
+              parent="menu_zain_pfs_root"
+              sequence="20"
+              groups="zain_pfs.group_pfs_employee"/>
+    <menuitem id="menu_zain_loan"
+              name="Personal Loans"
+              parent="menu_zain_pfs_loans"
+              action="action_zain_loan"
+              sequence="10"/>
+
+    <!-- ── Land ──────────────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_land"
+              name="Land"
+              parent="menu_zain_pfs_root"
+              sequence="30"
+              groups="zain_pfs.group_pfs_employee"/>
+    <menuitem id="menu_zain_land"
+              name="Land Plots"
+              parent="menu_zain_pfs_land"
+              action="action_zain_land"
+              sequence="10"/>
+    <menuitem id="menu_zain_land_loan"
+              name="Land Loans"
+              parent="menu_zain_pfs_land"
+              action="action_zain_land_loan"
+              sequence="20"/>
+
+    <!-- ── Withdrawals ───────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_withdrawals"
+              name="Withdrawals"
+              parent="menu_zain_pfs_root"
+              sequence="40"
+              groups="zain_pfs.group_pfs_employee"/>
+    <menuitem id="menu_zain_withdrawal"
+              name="Withdrawal Requests"
+              parent="menu_zain_pfs_withdrawals"
+              action="action_zain_withdrawal"
+              sequence="10"/>
+
+    <!-- ── Resignations ──────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_resignation"
+              name="Resignations"
+              parent="menu_zain_pfs_root"
+              sequence="50"
+              groups="zain_pfs.group_pfs_fund_admin"/>
+    <menuitem id="menu_zain_resignation"
+              name="Resignation &amp; Settlement"
+              parent="menu_zain_pfs_resignation"
+              action="action_zain_resignation"
+              sequence="10"/>
+
+    <!-- ── Profits ───────────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_profit"
+              name="Profit Distribution"
+              parent="menu_zain_pfs_root"
+              sequence="60"
+              groups="zain_pfs.group_pfs_fund_admin"/>
+    <menuitem id="menu_zain_profit_distribution"
+              name="Annual Distribution"
+              parent="menu_zain_pfs_profit"
+              action="action_zain_profit_distribution"
+              sequence="10"/>
+
+    <!-- ── Configuration ─────────────────────────────────────────────────── -->
+    <menuitem id="menu_zain_pfs_config"
+              name="Configuration"
+              parent="menu_zain_pfs_root"
+              sequence="100"
+              groups="zain_pfs.group_pfs_system_admin"/>
+    <menuitem id="menu_zain_configuration"
+              name="PFS Settings"
+              parent="menu_zain_pfs_config"
+              action="action_zain_configuration"
+              sequence="10"/>
+
+</odoo>

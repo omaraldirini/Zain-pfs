@@ -1,0 +1,33 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_zain_configuration_admin,zain.configuration admin,model_zain_configuration,group_pfs_system_admin,1,1,1,1
+access_zain_configuration_read,zain.configuration read,model_zain_configuration,group_pfs_fund_admin,1,0,0,0
+
+access_zain_member_admin,zain.member admin,model_zain_member,group_pfs_fund_admin,1,1,1,1
+access_zain_member_hr,zain.member hr,model_zain_member,group_pfs_hr,1,1,0,0
+access_zain_member_employee,zain.member employee,model_zain_member,group_pfs_employee,1,0,0,0
+
+access_zain_loan_admin,zain.loan admin,model_zain_loan,group_pfs_fund_admin,1,1,1,1
+access_zain_loan_hr,zain.loan hr,model_zain_loan,group_pfs_hr,1,1,0,0
+access_zain_loan_employee,zain.loan employee,model_zain_loan,group_pfs_employee,1,1,1,0
+access_zain_loan_line_admin,zain.loan.line admin,model_zain_loan_line,group_pfs_fund_admin,1,1,1,1
+access_zain_loan_line_employee,zain.loan.line employee,model_zain_loan_line,group_pfs_employee,1,0,0,0
+
+access_zain_withdrawal_admin,zain.withdrawal admin,model_zain_withdrawal,group_pfs_fund_admin,1,1,1,1
+access_zain_withdrawal_hr,zain.withdrawal hr,model_zain_withdrawal,group_pfs_hr,1,1,0,0
+access_zain_withdrawal_employee,zain.withdrawal employee,model_zain_withdrawal,group_pfs_employee,1,1,1,0
+
+access_zain_land_admin,zain.land admin,model_zain_land,group_pfs_fund_admin,1,1,1,1
+access_zain_land_employee,zain.land employee,model_zain_land,group_pfs_employee,1,0,0,0
+
+access_zain_land_loan_admin,zain.land.loan admin,model_zain_land_loan,group_pfs_fund_admin,1,1,1,1
+access_zain_land_loan_employee,zain.land.loan employee,model_zain_land_loan,group_pfs_employee,1,1,1,0
+access_zain_land_loan_line_admin,zain.land.loan.line admin,model_zain_land_loan_line,group_pfs_fund_admin,1,1,1,1
+access_zain_land_loan_line_employee,zain.land.loan.line employee,model_zain_land_loan_line,group_pfs_employee,1,0,0,0
+
+access_zain_resignation_admin,zain.resignation admin,model_zain_resignation,group_pfs_fund_admin,1,1,1,1
+access_zain_resignation_hr,zain.resignation hr,model_zain_resignation,group_pfs_hr,1,1,0,0
+access_zain_resignation_employee,zain.resignation employee,model_zain_resignation,group_pfs_employee,1,1,1,0
+
+access_zain_profit_distribution_admin,zain.profit.distribution admin,model_zain_profit_distribution,group_pfs_fund_admin,1,1,1,1
+access_zain_profit_distribution_committee,zain.profit.distribution committee,model_zain_profit_distribution,group_pfs_fund_committee,1,1,0,0
+access_zain_profit_distribution_line_admin,zain.profit.distribution.line admin,model_zain_profit_distribution_line,group_pfs_fund_admin,1,1,1,1
