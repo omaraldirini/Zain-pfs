@@ -56,11 +56,10 @@ class ZainLandEligibility(models.Model):
         string='Enrolment Date', default=fields.Date.today,
     )
 
-    _sql_constraints = [
-        ('member_active_uniq',
-         "UNIQUE(member_id, state) WHERE state NOT IN ('completed', 'removed')",
-         'A member can only appear once in the active eligibility queue.'),
-    ]
+    _member_active_uniq = models.Constraint(
+        "UNIQUE(member_id, state) WHERE state NOT IN ('completed', 'removed')",
+        'A member can only appear once in the active eligibility queue.',
+    )
 
     def action_offer_plot(self):
         for rec in self:

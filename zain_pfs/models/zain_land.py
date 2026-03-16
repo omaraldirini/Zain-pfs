@@ -36,10 +36,10 @@ class ZainLand(models.Model):
         compute='_compute_active_loan', store=False,
     )
 
-    _sql_constraints = [
-        ('plot_number_uniq', 'UNIQUE(plot_number)',
-         'Official Plot Number must be unique.'),
-    ]
+    _plot_number_uniq = models.Constraint(
+        'UNIQUE(plot_number)',
+        'Official Plot Number must be unique.',
+    )
 
     # ── Computed ──────────────────────────────────────────────────────────────
 

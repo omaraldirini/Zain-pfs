@@ -16,9 +16,7 @@ class ZainMember(models.Model):
         'hr.employee', string='Employee', required=True,
         ondelete='restrict', tracking=True,
     )
-    employee_number = fields.Char(
-        related='employee_id.employee_number', store=True, readonly=True,
-    )
+    employee_number = fields.Char(string='Employee Number', tracking=True)
     department_id = fields.Many2one(
         related='employee_id.department_id', store=True, readonly=True,
     )
