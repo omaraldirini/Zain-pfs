@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
+    <!-- ── Form view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_loan_form" model="ir.ui.view">
         <field name="name">zain.loan.form</field>
         <field name="model">zain.loan</field>
@@ -19,9 +20,10 @@
                     <button name="action_approval_2" string="Send for Approval #2" type="object"
                             invisible="state != 'approval_1'"
                             groups="zain_pfs.group_pfs_fund_committee"/>
-                    <button name="action_pending_payment" string="Approve – Pending Payment" type="object"
+                    <button name="action_pending_payment" string="Final Approval" type="object"
                             invisible="state != 'approval_2'"
-                            groups="zain_pfs.group_pfs_fund_committee"/>
+                            groups="zain_pfs.group_pfs_fund_committee"
+                            class="btn-primary"/>
                     <button name="action_disburse" string="Disburse Loan" type="object"
                             invisible="state != 'pending_payment'"
                             groups="zain_pfs.group_pfs_fund_admin"
@@ -30,59 +32,112 @@
                             invisible="state != 'active'"
                             groups="zain_pfs.group_pfs_fund_admin"/>
                     <button name="action_cancel" string="Cancel" type="object"
-                            invisible="state in ('active','paid','cancelled')"/>
+                            invisible="state in ('active', 'paid', 'cancelled')"/>
                     <button name="action_reset_draft" string="Reset to Draft" type="object"
-                            invisible="state not in ('cancelled','submitted')"
+                            invisible="state not in ('cancelled', 'submitted')"
                             groups="zain_pfs.group_pfs_fund_admin"/>
                     <field name="state" widget="statusbar"
                            statusbar_visible="draft,submitted,preparation,approval_1,approval_2,pending_payment,active,paid"/>
                 </header>
+
                 <sheet>
-                    <div class="oe_title">
-                        <h1><field name="name" readonly="1"/></h1>
+                    <!-- Stat buttons -->
+                    <div class="oe_button_box" name="button_box">
+                        <button class="oe_stat_button" type="object"
+                                name="action_mark_paid"
+                                icon="fa-exclamation-triangle"
+                                invisible="overdue_count == 0">
+                            <field name="overdue_count" widget="statinfo" string="Overdue"/>
+                        </button>
                     </div>
+
+                    <div class="oe_title">
+                        <h1>
+                            <field name="name" readonly="1"/>
+                        </h1>
+                    </div>
+
+                    <!-- ── Application ──────────────────────────────────────── -->
                     <group>
                         <group string="Application">
-                            <field name="member_id"/>
+                            <field name="member_id"
+                                   readonly="state not in ('draft',)"/>
                             <field name="date"/>
                             <field name="is_rescheduled"/>
+                            <field name="original_loan_id"
+                                   invisible="not is_rescheduled"
+                                   readonly="state not in ('draft', 'submitted')"/>
                         </group>
-                        <group string="Loan Details">
-                            <field name="loan_amount"/>
-                            <field name="installments"/>
+                        <group string="Loan Request">
+                            <field name="loan_amount"
+                                   readonly="state not in ('draft', 'submitted')"/>
+                            <field name="installments"
+                                   readonly="state not in ('draft', 'submitted')"/>
                             <field name="other_income"/>
                             <field name="bank_installment"/>
                         </group>
                     </group>
+
+                    <!-- ── Member summary (read-only, contextual) ───────────── -->
+                    <group string="Member Summary" invisible="not member_id">
+                        <field name="member_contribution_months" readonly="1"/>
+                        <field name="member_balance" readonly="1" string="Available Balance (JOD)"/>
+                        <field name="member_eligibility_50" readonly="1" string="50% Eligibility (JOD)"/>
+                    </group>
+
+                    <!-- ── HR verification ──────────────────────────────────── -->
                     <group string="HR Verification"
                            invisible="state == 'draft'">
                         <field name="average_income"
-                               attrs="{'readonly': [('state', 'not in', ['submitted'])]}"/>
+                               readonly="state != 'submitted'"/>
                     </group>
-                    <group string="Calculated Amounts" invisible="state == 'draft'">
-                        <field name="admin_fees" readonly="1"/>
-                        <field name="total_loan_amount" readonly="1"/>
-                        <field name="monthly_installment" readonly="1"/>
-                        <field name="first_installment" readonly="1"/>
-                        <field name="max_allowed_amount" readonly="1"/>
-                        <field name="remaining_balance" readonly="1"/>
+
+                    <!-- ── Calculated amounts ────────────────────────────────── -->
+                    <group string="Calculated Amounts"
+                           invisible="state == 'draft'">
+                        <group>
+                            <field name="admin_fees" readonly="1"/>
+                            <field name="total_loan_amount" readonly="1"/>
+                            <field name="monthly_installment" readonly="1"/>
+                            <field name="first_installment" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="max_allowed_amount" readonly="1"/>
+                            <field name="paid_amount" readonly="1"
+                                   invisible="state not in ('active', 'paid')"/>
+                            <field name="remaining_balance" readonly="1"
+                                   invisible="state not in ('active', 'paid')"/>
+                        </group>
                     </group>
+
+                    <!-- ── Payment / disbursement ────────────────────────────── -->
                     <group string="Payment Details"
-                           invisible="state not in ('pending_payment','active','paid')">
-                        <field name="payment_method"/>
-                        <field name="cheque_number" invisible="payment_method != 'cheque'"/>
-                        <field name="cheque_date" invisible="payment_method != 'cheque'"/>
-                        <field name="cheque_amount" invisible="payment_method != 'cheque'"/>
+                           invisible="state not in ('pending_payment', 'active', 'paid')">
+                        <group>
+                            <field name="payment_method"/>
+                            <field name="disbursement_date" readonly="1"
+                                   invisible="not disbursement_date"/>
+                        </group>
+                        <group invisible="payment_method != 'cheque'">
+                            <field name="cheque_number"/>
+                            <field name="cheque_date"/>
+                            <field name="cheque_amount"/>
+                        </group>
                     </group>
+
                     <field name="notes" placeholder="Notes..."/>
+
+                    <!-- ── Repayment schedule ────────────────────────────────── -->
                     <notebook>
                         <page string="Repayment Schedule" name="schedule"
-                              invisible="not line_ids">
+                              invisible="state not in ('active', 'paid')">
                             <field name="line_ids">
-                                <list editable="bottom">
+                                <list editable="bottom"
+                                      decoration-danger="not paid and date and date &lt; context_today()"
+                                      decoration-success="paid">
                                     <field name="sequence" optional="hide"/>
-                                    <field name="date"/>
-                                    <field name="amount"/>
+                                    <field name="date" string="Due Date"/>
+                                    <field name="amount" string="Amount (JOD)"/>
                                     <field name="paid"/>
                                     <field name="payment_date"/>
                                 </list>
@@ -95,12 +150,15 @@
         </field>
     </record>
 
+    <!-- ── List view ─────────────────────────────────────────────────────── -->
     <record id="view_zain_loan_list" model="ir.ui.view">
         <field name="name">zain.loan.list</field>
         <field name="model">zain.loan</field>
         <field name="arch" type="xml">
-            <list decoration-info="state=='draft'" decoration-success="state=='active'"
-                  decoration-muted="state in ('paid','cancelled')">
+            <list decoration-info="state == 'draft'"
+                  decoration-warning="overdue_count &gt; 0"
+                  decoration-success="state == 'active' and overdue_count == 0"
+                  decoration-muted="state in ('paid', 'cancelled')">
                 <field name="name"/>
                 <field name="member_id"/>
                 <field name="date"/>
@@ -108,11 +166,14 @@
                 <field name="installments"/>
                 <field name="monthly_installment"/>
                 <field name="remaining_balance"/>
+                <field name="overdue_count" string="Overdue" optional="show"/>
+                <field name="disbursement_date" optional="hide"/>
                 <field name="state"/>
             </list>
         </field>
     </record>
 
+    <!-- ── Search view ───────────────────────────────────────────────────── -->
     <record id="view_zain_loan_search" model="ir.ui.view">
         <field name="name">zain.loan.search</field>
         <field name="model">zain.loan</field>
@@ -120,18 +181,38 @@
             <search>
                 <field name="name"/>
                 <field name="member_id"/>
-                <filter name="active" string="Active" domain="[('state','=','active')]"/>
+                <filter name="active_loans" string="Active"
+                        domain="[('state','=','active')]"/>
                 <filter name="pending" string="Pending Approval"
                         domain="[('state','in',['submitted','preparation','approval_1','approval_2'])]"/>
+                <filter name="pending_payment" string="Pending Payment"
+                        domain="[('state','=','pending_payment')]"/>
+                <filter name="overdue" string="Has Overdue Installments"
+                        domain="[('overdue_count','>',0)]"/>
+                <filter name="reschedule" string="Reschedule / Buyout"
+                        domain="[('is_rescheduled','=',True)]"/>
+                <separator/>
+                <filter name="paid" string="Paid"
+                        domain="[('state','=','paid')]"/>
+                <group expand="0" string="Group By">
+                    <filter name="group_member" string="Member"
+                            context="{'group_by': 'member_id'}"/>
+                    <filter name="group_state" string="Status"
+                            context="{'group_by': 'state'}"/>
+                    <filter name="group_month" string="Application Month"
+                            context="{'group_by': 'date:month'}"/>
+                </group>
             </search>
         </field>
     </record>
 
+    <!-- ── Action ────────────────────────────────────────────────────────── -->
     <record id="action_zain_loan" model="ir.actions.act_window">
         <field name="name">Loans</field>
         <field name="res_model">zain.loan</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_zain_loan_search"/>
+        <field name="context">{'search_default_active_loans': 1}</field>
     </record>
 
 </odoo>
