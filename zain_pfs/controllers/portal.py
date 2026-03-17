@@ -416,6 +416,44 @@ class PFSPortal(CustomerPortal):
             'page_name': 'pfs_resignation',
         })
 
+    # ── Profit Distribution ──────────────────────────────────────────────────
+
+    @http.route('/my/pfs/profit', type='http', auth='user', website=True)
+    def portal_pfs_profit(self, **kwargs):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        # Each posted or approved distribution line the member belongs to
+        lines = member.profit_distribution_line_ids.sorted(
+            key=lambda l: l.distribution_id.fiscal_year, reverse=True
+        )
+        return request.render('zain_pfs.portal_pfs_profit', {
+            'member': member,
+            'lines': lines,
+            'page_name': 'pfs_profit',
+        })
+
+    @http.route('/my/pfs/profit/<int:distribution_id>', type='http', auth='user',
+                website=True)
+    def portal_pfs_profit_detail(self, distribution_id, **kwargs):
+        member = self._get_portal_member()
+        if not member:
+            return request.redirect('/my/pfs')
+
+        line = member.profit_distribution_line_ids.filtered(
+            lambda l: l.distribution_id.id == distribution_id
+        )
+        if not line:
+            return request.not_found()
+
+        return request.render('zain_pfs.portal_pfs_profit_detail', {
+            'member': member,
+            'distribution': line.distribution_id,
+            'line': line,
+            'page_name': 'pfs_profit',
+        })
+
     # ── Land Loans ───────────────────────────────────────────────────────────
 
     @http.route('/my/pfs/land-loans', type='http', auth='user', website=True)

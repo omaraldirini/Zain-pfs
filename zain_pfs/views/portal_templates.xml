@@ -56,12 +56,14 @@
             'offered':         'Plot Offered',
             'completed':       'Completed',
             'removed':         'Removed',
-            'resigned':        'Resigned',
-            'terminated':      'Terminated',
+            'resigned':          'Resigned',
+            'terminated':        'Terminated',
+            'pending_approval':  'Pending Approval',
+            'posted':            'Posted',
         }"/>
         <t t-set="_color" t-value="
-            'bg-success'              if state_value in ('active', 'approved', 'paid', 'completed') else
-            'bg-warning text-dark'    if state_value in ('submitted', 'hr_review', 'preparation', 'approval_1', 'approval_2', 'pending_payment', 'offered') else
+            'bg-success'              if state_value in ('active', 'approved', 'paid', 'completed', 'posted') else
+            'bg-warning text-dark'    if state_value in ('submitted', 'hr_review', 'preparation', 'approval_1', 'approval_2', 'pending_payment', 'offered', 'pending_approval') else
             'bg-danger'               if state_value in ('cancelled', 'removed', 'terminated') else
             'bg-secondary'
         "/>
@@ -261,6 +263,24 @@
                                 </div>
                             </a>
                         </div>
+                        <!-- Profit Distribution card — shown when member has at least one line -->
+                        <t t-if="member.profit_distribution_line_ids">
+                            <div class="col-sm-6 col-lg-3">
+                                <a href="/my/pfs/profit"
+                                   class="card border-0 shadow-sm text-decoration-none h-100">
+                                    <div class="card-body d-flex align-items-center gap-3">
+                                        <i class="fa fa-2x fa-line-chart text-success"/>
+                                        <div>
+                                            <strong>Profit Distribution</strong>
+                                            <p class="text-muted mb-0 small">
+                                                <t t-out="len(member.profit_distribution_line_ids)"/> record(s) ·
+                                                <t t-esc="'%.3f' % member.total_profits"/> JOD total
+                                            </p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
                         <!-- Settlement card — shown when member has a resignation record -->
                         <t t-if="latest_resignation">
                             <div class="col-sm-6 col-lg-3">
@@ -1914,6 +1934,331 @@
                     <a href="/my/pfs/resignation" class="btn btn-outline-secondary">
                         <i class="fa fa-arrow-left me-1"/> Back to Settlement
                     </a>
+                </div>
+            </div>
+        </t>
+    </template>
+
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Profit Distribution list  /my/pfs/profit
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="portal_pfs_profit" name="PFS: My Profit Distributions">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <nav aria-label="breadcrumb">
+                <t t-call="zain_pfs.portal_pfs_breadcrumb">
+                    <t t-set="crumbs" t-value="[
+                        ('Provident Fund', '/my/pfs'),
+                        ('Profit Distribution', None)]"/>
+                </t>
+            </nav>
+
+            <div class="o_portal_wrap">
+                <div class="container-fluid py-3">
+                    <h3 class="mb-4">Profit Distribution</h3>
+
+                    <t t-if="not lines">
+                        <div class="alert alert-info">
+                            <i class="fa fa-info-circle me-2"/>
+                            No profit distribution records found for your account yet.
+                        </div>
+                    </t>
+
+                    <t t-if="lines">
+                        <!-- Summary card -->
+                        <div class="card border-0 shadow-sm mb-4">
+                            <div class="card-body">
+                                <div class="row text-center g-3">
+                                    <div class="col-6 col-md-3">
+                                        <div class="fs-4 fw-bold text-success">
+                                            <t t-esc="'%.3f' % member.total_profits"/> JOD
+                                        </div>
+                                        <small class="text-muted">Total Profits Earned</small>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="fs-4 fw-bold">
+                                            <t t-out="len(lines)"/>
+                                        </div>
+                                        <small class="text-muted">Distribution Years</small>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="fs-4 fw-bold text-primary">
+                                            <t t-esc="'%.3f' % (sum(l.profit_amount for l in lines if l.posted))"/> JOD
+                                        </div>
+                                        <small class="text-muted">Posted Profits</small>
+                                    </div>
+                                    <div class="col-6 col-md-3">
+                                        <div class="fs-4 fw-bold text-warning">
+                                            <t t-esc="'%.3f' % (sum(l.profit_amount for l in lines if not l.posted))"/> JOD
+                                        </div>
+                                        <small class="text-muted">Pending Posting</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Distribution table -->
+                        <div class="card border-0 shadow-sm">
+                            <div class="card-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th>Reference</th>
+                                                <th>Fiscal Year</th>
+                                                <th>Distribution Date</th>
+                                                <th class="text-end">Avg Monthly Balance</th>
+                                                <th class="text-end">Share %</th>
+                                                <th class="text-end">Profit Amount</th>
+                                                <th class="text-center">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <t t-foreach="lines" t-as="line">
+                                                <tr>
+                                                    <td>
+                                                        <a t-attf-href="/my/pfs/profit/#{line.distribution_id.id}"
+                                                           class="fw-semibold text-decoration-none">
+                                                            <t t-out="line.distribution_id.name"/>
+                                                        </a>
+                                                    </td>
+                                                    <td><t t-out="line.distribution_id.fiscal_year"/></td>
+                                                    <td>
+                                                        <t t-if="line.distribution_id.date">
+                                                            <t t-out="line.distribution_id.date"/>
+                                                        </t>
+                                                        <span t-else="" class="text-muted">—</span>
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <t t-esc="'%.3f' % line.avg_monthly_balance"/> JOD
+                                                    </td>
+                                                    <td class="text-end">
+                                                        <t t-esc="'%.4f' % line.share_percent"/>%
+                                                    </td>
+                                                    <td class="text-end fw-semibold">
+                                                        <t t-attf-class="#{('text-success' if line.posted else 'text-warning')}">
+                                                            <t t-esc="'%.3f' % line.profit_amount"/> JOD
+                                                        </t>
+                                                    </td>
+                                                    <td class="text-center">
+                                                        <t t-set="state_value"
+                                                           t-value="line.distribution_id.state"/>
+                                                        <t t-call="zain_pfs.portal_pfs_state_badge"/>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                        <tfoot class="table-light fw-semibold">
+                                            <tr>
+                                                <td colspan="5" class="text-end">Total</td>
+                                                <td class="text-end">
+                                                    <t t-esc="'%.3f' % sum(l.profit_amount for l in lines)"/> JOD
+                                                </td>
+                                                <td/>
+                                            </tr>
+                                        </tfoot>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+
+                    <div class="mt-3">
+                        <a href="/my/pfs" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left me-1"/> Back to Dashboard
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- ══════════════════════════════════════════════════════════════════════
+         Profit Distribution detail  /my/pfs/profit/<id>
+    ══════════════════════════════════════════════════════════════════════════ -->
+    <template id="portal_pfs_profit_detail" name="PFS: Profit Distribution Detail">
+        <t t-call="portal.portal_layout">
+            <t t-set="breadcrumbs_searchbar" t-value="False"/>
+            <nav aria-label="breadcrumb">
+                <t t-call="zain_pfs.portal_pfs_breadcrumb">
+                    <t t-set="crumbs" t-value="[
+                        ('Provident Fund', '/my/pfs'),
+                        ('Profit Distribution', '/my/pfs/profit'),
+                        (distribution.name, None)]"/>
+                </t>
+            </nav>
+
+            <div class="o_portal_wrap">
+                <div class="container-fluid py-3">
+
+                    <!-- Title + badge -->
+                    <div class="d-flex flex-wrap align-items-center gap-3 mb-3">
+                        <h3 class="mb-0" t-out="distribution.name"/>
+                        <t t-set="state_value" t-value="distribution.state"/>
+                        <t t-call="zain_pfs.portal_pfs_state_badge"/>
+                    </div>
+
+                    <!-- Pending notice -->
+                    <t t-if="distribution.state not in ('approved', 'posted')">
+                        <div class="alert alert-warning d-flex align-items-center gap-2 mb-4">
+                            <i class="fa fa-clock-o fa-lg"/>
+                            <div>
+                                This distribution is still <strong>under review</strong>.
+                                Profit amounts shown are <em>provisional</em> and may change
+                                before the Committee approves and posts the distribution.
+                            </div>
+                        </div>
+                    </t>
+
+                    <div class="row g-4">
+
+                        <!-- Left column: distribution header + your share -->
+                        <div class="col-lg-7">
+
+                            <!-- Distribution details -->
+                            <div class="card border-0 shadow-sm mb-4">
+                                <div class="card-header bg-white fw-semibold">
+                                    <i class="fa fa-calendar me-2 text-muted"/>Distribution Details
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-5 text-muted">Fiscal Year</dt>
+                                        <dd class="col-sm-7 fw-semibold">
+                                            <t t-out="distribution.fiscal_year"/>
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Period</dt>
+                                        <dd class="col-sm-7">
+                                            <t t-out="distribution.fiscal_year_start"/> –
+                                            <t t-out="distribution.fiscal_year_end"/>
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Distribution Date</dt>
+                                        <dd class="col-sm-7">
+                                            <t t-if="distribution.date">
+                                                <t t-out="distribution.date"/>
+                                            </t>
+                                            <span t-else="" class="text-muted">Not set</span>
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Total Profit Pool</dt>
+                                        <dd class="col-sm-7 fw-semibold text-primary">
+                                            <t t-esc="'%.3f' % distribution.total_profit"/> JOD
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Total Members</dt>
+                                        <dd class="col-sm-7">
+                                            <t t-out="distribution.line_count"/>
+                                        </dd>
+
+                                        <dt class="col-sm-5 text-muted">Total Avg Balance</dt>
+                                        <dd class="col-sm-7">
+                                            <t t-esc="'%.3f' % distribution.total_avg_balance"/> JOD
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+
+                            <!-- Your profit share -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white fw-semibold">
+                                    <i class="fa fa-user me-2 text-muted"/>Your Profit Share
+                                </div>
+                                <div class="card-body">
+                                    <dl class="row mb-0">
+                                        <dt class="col-sm-6 text-muted">Avg Monthly Balance</dt>
+                                        <dd class="col-sm-6 fw-semibold">
+                                            <t t-esc="'%.3f' % line.avg_monthly_balance"/> JOD
+                                        </dd>
+
+                                        <dt class="col-sm-6 text-muted">Your Share of Fund</dt>
+                                        <dd class="col-sm-6 fw-semibold">
+                                            <t t-esc="'%.4f' % line.share_percent"/>%
+                                        </dd>
+
+                                        <dt class="col-sm-6 text-muted fw-bold border-top pt-2 mt-1">
+                                            Profit Amount
+                                        </dt>
+                                        <dd class="col-sm-6 border-top pt-2 mt-1">
+                                            <span t-attf-class="fs-5 fw-bold #{('text-success' if line.posted else 'text-warning')}">
+                                                <t t-esc="'%.3f' % line.profit_amount"/> JOD
+                                            </span>
+                                            <span t-if="not line.posted"
+                                                  class="badge bg-warning text-dark ms-2 small">
+                                                Provisional
+                                            </span>
+                                            <span t-if="line.posted"
+                                                  class="badge bg-success ms-2 small">
+                                                Posted
+                                            </span>
+                                        </dd>
+                                    </dl>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right column: approval info + how profit is calculated -->
+                        <div class="col-lg-5">
+
+                            <!-- Approval info (shown once approved/posted) -->
+                            <t t-if="distribution.state in ('approved', 'posted')">
+                                <div class="card border-0 shadow-sm mb-4">
+                                    <div class="card-header bg-white fw-semibold">
+                                        <i class="fa fa-check-circle me-2 text-success"/>Approval
+                                    </div>
+                                    <div class="card-body">
+                                        <dl class="row mb-0">
+                                            <dt class="col-sm-5 text-muted">Approved By</dt>
+                                            <dd class="col-sm-7">
+                                                <t t-out="distribution.approved_by.name or '—'"/>
+                                            </dd>
+                                            <dt class="col-sm-5 text-muted">Approval Date</dt>
+                                            <dd class="col-sm-7">
+                                                <t t-out="distribution.approval_date or '—'"/>
+                                            </dd>
+                                            <t t-if="distribution.posting_date">
+                                                <dt class="col-sm-5 text-muted">Posted On</dt>
+                                                <dd class="col-sm-7">
+                                                    <t t-out="distribution.posting_date"/>
+                                                </dd>
+                                            </t>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </t>
+
+                            <!-- How the profit is calculated -->
+                            <div class="card border-0 shadow-sm">
+                                <div class="card-header bg-white fw-semibold">
+                                    <i class="fa fa-calculator me-2 text-muted"/>How It's Calculated
+                                </div>
+                                <div class="card-body small text-muted">
+                                    <p class="mb-2">
+                                        Your profit is proportional to your average monthly
+                                        balance relative to all members:
+                                    </p>
+                                    <div class="bg-light rounded p-2 font-monospace small mb-2">
+                                        Share % = Your Avg Balance ÷ Fund Total Avg Balance<br/>
+                                        Profit  = Total Profit Pool × Share %
+                                    </div>
+                                    <p class="mb-0">
+                                        Average monthly balance is calculated from your
+                                        posted contributions, prior profits, and approved
+                                        withdrawals over the fiscal year.
+                                    </p>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a href="/my/pfs/profit" class="btn btn-outline-secondary">
+                            <i class="fa fa-arrow-left me-1"/> Back to Profit Distribution
+                        </a>
+                    </div>
+
                 </div>
             </div>
         </t>
